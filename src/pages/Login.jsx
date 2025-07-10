@@ -15,10 +15,8 @@ export default function Login() {
         email: email,
         password: password,
       });
-
       if (error) throw error;
-      // Redirect akan ditangani otomatis oleh App.jsx, JANGAN navigate dari sini.
-
+      // Redirect ditangani oleh App.jsx
     } catch (error) {
       alert(error.error_description || error.message);
     } finally {
@@ -26,15 +24,13 @@ export default function Login() {
     }
   };
   
-  // Tampilan JSX bisa menggunakan yang sudah Anda buat, tidak perlu diubah.
-  // Pastikan saja form dan input terhubung dengan state dan handler di atas.
   return (
-    <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px' }}>
+    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
       <h2>Login ke Taniku</h2>
       <form onSubmit={handleLogin}>
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <button type="submit" disabled={loading}>
+        <input style={{width: '95%', padding: '8px', marginBottom: '10px'}} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input style={{width: '95%', padding: '8px', marginBottom: '10px'}} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <button style={{width: '100%', padding: '10px'}} type="submit" disabled={loading}>
           {loading ? 'Loading...' : 'Login'}
         </button>
       </form>
