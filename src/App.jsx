@@ -8,6 +8,14 @@ import Login from './pages/Login';
 import DashboardPetani from './pages/petani/DashboardPetani';
 import DashboardDinas from './pages/dinas/DashboardDinas';
 
+
+import PetaniLayout from './pages/Petani/PetaniLayout';
+import Lahan from './pages/Petani/lahan';
+import Bantuan from './pages/Petani/bantuan';
+import Pasar from './pages/Petani/pasar';
+import Konsultasi from './pages/Petani/konsultasi';
+import Edukasi from './pages/Petani/edukasi';
+
 function App() {
   const navigate = useNavigate();
 
@@ -37,7 +45,16 @@ function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/petani/dashboard" element={<DashboardPetani />} />
+    
+      <Route path="/petani" element={<PetaniLayout />}>
+        {/* Rute anak akan muncul di dalam <Outlet /> PetaniLayout */}
+        <Route path="/petani/dashboard" element={<DashboardPetani />} />
+        <Route path="lahan" element={<Lahan />} />
+        <Route path="bantuan" element={<Bantuan />} />
+        <Route path="konsultasi" element={<Konsultasi />} />
+        <Route path="pasar" element={<Pasar />} />
+        <Route path="edukasi" element={<Edukasi />} />
+      </Route>
       <Route path="/dinas/dashboard" element={<DashboardDinas />} />
     </Routes>
   );
