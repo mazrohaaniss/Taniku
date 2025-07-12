@@ -47,22 +47,85 @@ export default function Register() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-      <h2>Register Akun Taniku</h2>
-      <form onSubmit={handleRegister}>
-        <input style={{width: '95%', padding: '8px', marginBottom: '10px'}} type="text" name="namaLengkap" placeholder="Nama Lengkap" onChange={handleChange} required />
-        <input style={{width: '95%', padding: '8px', marginBottom: '10px'}} type="email" name="email" placeholder="Email" onChange={handleChange} required />
-        <input style={{width: '95%', padding: '8px', marginBottom: '10px'}} type="password" name="password" placeholder="Password (min. 6 karakter)" onChange={handleChange} required />
-        <input style={{width: '95%', padding: '8px', marginBottom: '10px'}} type="tel" name="no_wa" placeholder="Nomor WhatsApp (Opsional)" onChange={handleChange} />
-        <select style={{width: '100%', padding: '8px', marginBottom: '10px'}} name="role" value={formData.role} onChange={handleChange}>
-          <option value="petani">Petani</option>
-          <option value="dinas">Dinas Pertanian</option>
-        </select>
-        <button style={{width: '100%', padding: '10px'}} type="submit" disabled={loading}>
-          {loading ? 'Mendaftar...' : 'Register'}
-        </button>
-      </form>
-      <p>Sudah punya akun? <Link to="/login">Login</Link></p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Register Akun Taniku</h2>
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div>
+            <label htmlFor="namaLengkap" className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+            <input
+              id="namaLengkap"
+              type="text"
+              name="namaLengkap"
+              placeholder="Masukkan nama lengkap"
+              onChange={handleChange}
+              required
+              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              placeholder="Masukkan email"
+              onChange={handleChange}
+              required
+              className="mt-1bird w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              placeholder="Masukkan password (min. 6 karakter)"
+              onChange={handleChange}
+              required
+              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label htmlFor="no_wa" className="block text-sm font-medium text-gray-700">Nomor WhatsApp (Opsional)</label>
+            <input
+              id="no_wa"
+              type="tel"
+              name="no_wa"
+              placeholder="Masukkan nomor WhatsApp"
+              onChange={handleChange}
+              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="petani">Petani</option>
+              <option value="dinas">Dinas Pertanian</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-2 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {loading ? 'Mendaftar...' : 'Register'}
+          </button>
+        </form>
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Sudah punya akun?{' '}
+          <Link to="/login" className="text-green-600 hover:text-green-800 font-medium">
+            Login
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
