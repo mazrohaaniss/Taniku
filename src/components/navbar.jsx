@@ -10,18 +10,18 @@ const Navbar = ({ scrollY }) => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <Link to="/" className="flex items-center space-x-2">
-            <Leaf className={`w-8 h-8 transition-colors ${scrollY > 50 ? 'text-emerald-600' : 'text-sky-700'}`} />
-            <span className={`text-2xl font-bold transition-colors ${scrollY > 50 ? 'text-gray-800' : 'text-sky-700'}`}>Taniku</span>
+            <Leaf className={`w-8 h-8 transition-colors ${scrollY > 50 ? 'text-emerald-600' : 'text-white'}`} />
+            <span className={`text-2xl font-bold transition-colors ${scrollY > 50 ? 'text-gray-800' : 'text-white'}`}>Taniku</span>
           </Link>
           
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#beranda" className={`hover:text-emerald-600 transition-colors ${scrollY > 50 ? 'text-gray-800' : 'text-sky-700'}`}>Beranda</a>
-            <a href="#fitur" className={`hover:text-emerald-600 transition-colors ${scrollY > 50 ? 'text-gray-800' : 'text-sky-700'}`}>Fitur</a>
-            <a href="#tentang" className={`hover:text-emerald-600 transition-colors ${scrollY > 50 ? 'text-gray-800' : 'text-sky-700'}`}>Tentang</a>
+            <a href="#beranda" className={`hover:text-emerald-600 transition-colors ${scrollY > 50 ? 'text-gray-800' : 'text-white'}`}>Beranda</a>
+            <a href="#fitur" className={`hover:text-emerald-600 transition-colors ${scrollY > 50 ? 'text-gray-800' : 'text-white'}`}>Fitur</a>
+            <a href="#tentang" className={`hover:text-emerald-600 transition-colors ${scrollY > 50 ? 'text-gray-800' : 'text-white'}`}>Tentang</a>
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/login" className={`px-6 py-2 rounded-full font-semibold transition-colors ${scrollY > 50 ? 'text-gray-800 hover:text-emerald-600' : 'text-sky-700 hover:bg-sky-100'}`}>
+            <Link to="/login" className={`px-6 py-2 rounded-full font-semibold transition-colors ${scrollY > 50 ? 'text-gray-800 hover:text-emerald-600' : 'text-white hover:bg-sky-100'}`}>
               Masuk
             </Link>
             <Link to="/register" className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 transform hover:scale-105">
