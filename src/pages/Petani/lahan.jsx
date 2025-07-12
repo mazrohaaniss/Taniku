@@ -14,7 +14,11 @@ export default function Lahan() {
       setError(null);
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Pengguna tidak terautentikasi.');
+        if (!user) {
+          setError('Pengguna tidak terautentikasi. Silakan login ulang.');
+          setLoading(false);
+          return;
+        }
         setUser(user);
 
         const { data, error: fetchError } = await supabase
@@ -26,23 +30,24 @@ export default function Lahan() {
         if (fetchError) throw fetchError;
         setLahanList(data || []);
       } catch (error) {
-        setError(error.message);
+        setError(`Gagal memuat data lahan: ${error.message}`);
+        console.error('Error fetching lahan data:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchUserAndLahan();
-  }, []);
+  }, []); // Kosongkan dependency array untuk hanya jalankan sekali saat mount
 
   if (loading) return <div className="text-center py-10 text-gray-600">Memuat data lahan...</div>;
   if (error) return <div className="text-center py-10 bg-red-100 text-red-600">{error}</div>;
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-white p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-emerald-500">Manajemen Lahan</h1>
-        <Link to="/petani/tambahlahan" className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-emerald-700 transition-colors">
+        <Link to="/petani/tambahlahan" className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-emerald-700">
           + Tambah Lahan Baru
         </Link>
       </div>
@@ -55,11 +60,12 @@ export default function Lahan() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {lahanList.map((lahan) => (
-            <Link to={`/petani/lahan/${lahan.id}`} key={lahan.id} className="block bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition-colors">
+            <Link to={`/petani/lahan/${lahan.id}`} key={lahan.id} className="block bg-gray-800 p-6 rounded-lg hover:bg-gray-700">
               <h2 className="text-xl font-bold text-white mb-2">{lahan.nama_lahan}</h2>
+              <p className="text-gray-400">Luas: {lahan.luas_lahan_hektar} Hektar</p>
+              <p className="text-gray-400">Lokasi: {lahan.lokasi}</p>
               <p className="text-gray-400">Tanaman: {lahan.tanaman_sekarang || 'Tidak ada'}</p>
-              <p className="text-gray-400">Status: {lahan.status}</p>
-              <p className="text-gray-400">Tanam: {lahan.tanggal_tanam ? new Date(lahan.tanggal_tanam).toLocaleDateString() : 'Belum ditanam'}</p>
+              <p className="text-gray-400">Status: {lahan.status || 'Kosong'}</p>
             </Link>
           ))}
         </div>

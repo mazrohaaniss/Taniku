@@ -2,20 +2,35 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Geocoding menggunakan Nominatim OpenStreetMap
+const geocodeLocation = async (location) => {
+  const response = await fetch(
+    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`
+  );
+  const data = await response.json();
+  if (data && data.length > 0) {
+    return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+  }
+  return null;
+};
 
 export default function TambahLahan() {
   const [formData, setFormData] = useState({
     nama_lahan: '',
     luas_lahan_hektar: '',
     lokasi: '',
+    tanaman_sekarang: '',
+    status: 'Kosong',
     latitude: '',
     longitude: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
-  const mapRef = useRef(null); // Referensi ke elemen map
-  const mapInstanceRef = useRef(null); // Referensi ke instance peta
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,16 +43,16 @@ export default function TambahLahan() {
   }, [navigate]);
 
   useEffect(() => {
-    if (!mapRef.current || !user) return; // Hentikan jika elemen atau user belum ada
+    if (!mapRef.current || !user) return;
 
-    // Inisialisasi peta hanya jika elemen ada
     if (!mapInstanceRef.current) {
-      mapInstanceRef.current = L.map(mapRef.current).setView([-6.2, 106.8], 10); // Default Jakarta
+      mapInstanceRef.current = L.map(mapRef.current).setView([-6.2, 106.8], 13); // Default Jakarta
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(mapInstanceRef.current);
 
-      const marker = L.marker([0, 0], { draggable: true }).addTo(mapInstanceRef.current);
+      const marker = L.marker([-6.2, 106.8], { draggable: true }).addTo(mapInstanceRef.current);
       marker.on('dragend', () => {
         const { lat, lng } = marker.getLatLng();
         setFormData((prev) => ({ ...prev, latitude: lat.toFixed(6), longitude: lng.toFixed(6) }));
@@ -51,14 +66,29 @@ export default function TambahLahan() {
 
     return () => {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove(); // Cleanup saat unmount
+        mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
     };
-  }, [user]); // Hanya jalankan saat user berubah
+  }, [user]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === 'lokasi' && value) {
+      geocodeLocation(value).then((coords) => {
+        if (coords && mapInstanceRef.current) {
+          mapInstanceRef.current.setView(coords, 13);
+          const marker = mapInstanceRef.current.getBounds().getCenter();
+          setFormData((prev) => ({ ...prev, latitude: coords[0].toFixed(6), longitude: coords[1].toFixed(6) }));
+          L.marker(coords, { draggable: true }).addTo(mapInstanceRef.current).on('dragend', () => {
+            const { lat, lng } = marker.getLatLng();
+            setFormData((prev) => ({ ...prev, latitude: lat.toFixed(6), longitude: lng.toFixed(6) }));
+          });
+        }
+      }).catch(() => setError('Lokasi tidak ditemukan, silakan masukkan lokasi yang valid.'));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -84,7 +114,8 @@ export default function TambahLahan() {
           nama_lahan: formData.nama_lahan,
           luas_lahan_hektar: luas,
           lokasi: formData.lokasi,
-          status: 'Kosong',
+          tanaman_sekarang: formData.tanaman_sekarang || null,
+          status: formData.status,
           latitude: formData.latitude || null,
           longitude: formData.longitude || null,
         });
@@ -112,8 +143,8 @@ export default function TambahLahan() {
             className="w-full p-3 rounded bg-gray-700 text-white placeholder-gray-400"
             type="text"
             name="nama_lahan"
-            placeholder="Nama Lahan (e.g., Sawah Irigasi Desa)"
-            value={formData.nama_lahan || ''}
+            placeholder="Nama Lahan (e.g., Sawah Blok A)"
+            value={formData.nama_lahan}
             onChange={handleChange}
             required
           />
@@ -123,7 +154,7 @@ export default function TambahLahan() {
             step="0.1"
             name="luas_lahan_hektar"
             placeholder="Luas (Hektar)"
-            value={formData.luas_lahan_hektar || ''}
+            value={formData.luas_lahan_hektar}
             onChange={handleChange}
             required
           />
@@ -131,13 +162,21 @@ export default function TambahLahan() {
             className="w-full p-3 rounded bg-gray-700 text-white placeholder-gray-400"
             type="text"
             name="lokasi"
-            placeholder="Lokasi (Kecamatan/Desa)"
-            value={formData.lokasi || ''}
+            placeholder="Lokasi (e.g., Kecamatan Sukoharjo, Jawa Tengah)"
+            value={formData.lokasi}
             onChange={handleChange}
             required
           />
+          <input
+            className="w-full p-3 rounded bg-gray-700 text-white placeholder-gray-400"
+            type="text"
+            name="tanaman_sekarang"
+            placeholder="Tanaman Saat Ini (opsional)"
+            value={formData.tanaman_sekarang}
+            onChange={handleChange}
+          />
           <div ref={mapRef} style={{ height: '200px', width: '100%', marginBottom: '1rem' }}></div>
-          <p className="text-gray-400 text-sm">Klik peta untuk menentukan lokasi lahan. Koordinat: {formData.latitude}, {formData.longitude}</p>
+          <p className="text-gray-400 text-sm">Koordinat: {formData.latitude}, {formData.longitude}</p>
           <button
             type="submit"
             disabled={loading || !formData.latitude || !formData.longitude}

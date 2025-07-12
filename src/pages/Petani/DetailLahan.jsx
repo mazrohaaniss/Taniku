@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { Leaf, Sprout, Droplet, Bug, Package } from 'lucide-react';
 
 const getIconForActivity = (jenis) => {
@@ -19,6 +21,8 @@ export default function DetailLahan() {
   const [lahan, setLahan] = useState(null);
   const [aktivitas, setAktivitas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,6 +54,27 @@ export default function DetailLahan() {
     fetchData();
   }, [lahanId]);
 
+  useEffect(() => {
+    if (!mapRef.current || !lahan || !lahan.latitude || !lahan.longitude) return;
+
+    if (!mapInstanceRef.current) {
+      mapInstanceRef.current = L.map(mapRef.current).setView([lahan.latitude, lahan.longitude], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(mapInstanceRef.current);
+
+      L.marker([lahan.latitude, lahan.longitude], { draggable: false }).addTo(mapInstanceRef.current);
+    }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [lahan]);
+
   if (loading) return <div className="text-center py-10 text-gray-600">Memuat detail lahan...</div>;
   if (!lahan) return <div className="text-center py-10 bg-gray-800 text-white">Lahan tidak ditemukan.</div>;
 
@@ -60,18 +85,21 @@ export default function DetailLahan() {
       <div className="bg-gray-800 p-6 rounded-lg mb-6">
         <h1 className="text-3xl font-bold text-emerald-500 mb-2">{lahan.nama_lahan}</h1>
         <p className="text-gray-400">Luas: {lahan.luas_lahan_hektar} Hektar</p>
+        <p className="text-gray-400">Lokasi: {lahan.lokasi}</p>
         <p className="text-gray-400">Tanaman: {lahan.tanaman_sekarang || 'Tidak ada'}</p>
         <p className="text-gray-400">Status: {lahan.status}</p>
       </div>
+
+      <div ref={mapRef} style={{ height: '200px', width: '100%', marginBottom: '1rem', borderRadius: '4px' }}></div>
 
       <Link to={`/petani/lahan/${lahanId}/tambahaktivitas`} className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-emerald-700 mb-6">
         + Tambah Catatan Aktivitas
       </Link>
 
       <div className="bg-gray-800 p-6 rounded-lg">
-        <h2 className="text-2xl font-bold text-white mb-4">Linimasa Aktivitas</h2>
+        <h2 className="text-2xl font-bold text-white mb-4">Buku Harian Lahan</h2>
         {aktivitas.length === 0 ? (
-          <p className="text-gray-400">Belum ada aktivitas untuk lahan ini.</p>
+          <p className="text-gray-400">Belum ada aktivitas untuk lahan ini. Mulai tambahkan aktivitas!</p>
         ) : (
           <div className="space-y-4">
             {aktivitas.map((act) => (
@@ -80,7 +108,7 @@ export default function DetailLahan() {
                 <div>
                   <h3 className="text-white font-semibold">{act.jenis_aktivitas} - {act.deskripsi || 'Tanpa deskripsi'}</h3>
                   <p className="text-gray-400">{new Date(act.tanggal_aktivitas).toLocaleDateString()}</p>
-                  {act.jumlah && <p className="text-gray-400">{act.jumlah} {act.satuan}</p>}
+                  {act.jumlah && <p className="text-gray-400">{act.jumlah} {act.satuan || 'unit'}</p>}
                 </div>
               </div>
             ))}

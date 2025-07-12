@@ -3,7 +3,7 @@ import Sidebar from '../../components/petani/SIdebar'; // Pastikan path ini bena
 
 export default function PetaniLayout() {
   return (
-    <div className="flex bg-gray-900 text-white min-h-screen">
+    <div className="flex text-white min-h-screen">
       {/* Sidebar akan selalu tampil untuk semua halaman petani */}
       <Sidebar />
       
