@@ -1,18 +1,31 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function Lahan() {
   const [lahanList, setLahanList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
+  const location = useLocation(); // Untuk memicu ulang useEffect saat navigasi
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchUserAndLahan = async () => {
+      if (!mounted) return;
       setLoading(true);
       setError(null);
+      console.log('Fetching lahan data...'); // Debugging
+
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setError('Sesi tidak valid. Silakan login ulang.');
+          setLoading(false);
+          return;
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           setError('Pengguna tidak terautentikasi. Silakan login ulang.');
@@ -28,17 +41,20 @@ export default function Lahan() {
           .order('created_at', { ascending: false });
 
         if (fetchError) throw fetchError;
-        setLahanList(data || []);
+        if (mounted) setLahanList(data || []);
       } catch (error) {
-        setError(`Gagal memuat data lahan: ${error.message}`);
+        if (mounted) setError(`Gagal memuat data lahan: ${error.message}`);
         console.error('Error fetching lahan data:', error);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
     fetchUserAndLahan();
-  }, []); // Kosongkan dependency array untuk hanya jalankan sekali saat mount
+    return () => {
+      mounted = false;
+    };
+  }, [location]); // Tambahkan location sebagai dependency untuk memicu ulang saat navigasi
 
   if (loading) return <div className="text-center py-10 text-gray-600">Memuat data lahan...</div>;
   if (error) return <div className="text-center py-10 bg-red-100 text-red-600">{error}</div>;
