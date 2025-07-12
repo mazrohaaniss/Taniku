@@ -15,6 +15,8 @@ import TambahLahan from './pages/Petani/TambahLahan';
 import DetailLahan from './pages/Petani/DetailLahan';
 import TambahAktivitas from './pages/Petani/TambahAktivitas';
 import Bantuan from './pages/petani/bantuan';
+import TambahBantuan from './pages/Petani/TambahBantuan'; 
+import DetailPengajuan from './pages/Petani/DetailPengajuan';
 import Pasar from './pages/petani/pasar';
 import Konsultasi from './pages/Petani/konsultasi';
 import Edukasi from './pages/Petani/edukasi';
@@ -62,6 +64,8 @@ function App() {
         <Route path="lahan/:lahanId" element={<DetailLahan />} />
         <Route path="/petani/lahan/:lahanId/tambahaktivitas" element={<TambahAktivitas />} />
         <Route path="bantuan" element={<Bantuan />} />
+        <Route path="bantuan/tambah" element={<TambahBantuan />} />
+        <Route path="bantuan/:id" element={<DetailPengajuan />} /> 
         <Route path="konsultasi" element={<Konsultasi />} />
         <Route path="pasar" element={<Pasar />} />
         <Route path="edukasi" element={<Edukasi />} />
