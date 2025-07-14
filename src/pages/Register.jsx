@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
+import { Leaf, CheckCircle, AlertTriangle } from 'lucide-react';
 
 export default function Register() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [formData, setFormData] = useState({
     namaLengkap: '',
     email: '',
@@ -19,13 +22,17 @@ export default function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+
     if (formData.password.length < 6) {
-      alert('Password minimal harus 6 karakter.');
+      setError('Password minimal harus 6 karakter.');
       return;
     }
+    
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -36,95 +43,102 @@ export default function Register() {
           },
         },
       });
-      if (error) throw error;
-      alert('Pendaftaran berhasil! Silakan login.');
-      navigate('/login');
+
+      if (signUpError) throw signUpError;
+      
+      // Check if user is created but needs confirmation
+      if (data.user && !data.session) {
+         setSuccessMessage('Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi.');
+      } else {
+         setSuccessMessage('Pendaftaran berhasil! Anda akan dialihkan ke halaman login.');
+         setTimeout(() => navigate('/login'), 3000);
+      }
+
     } catch (error) {
-      alert(error.error_description || error.message);
+      console.error(error);
+      if (error.message.includes("User already registered")) {
+        setError('Email ini sudah terdaftar. Silakan gunakan email lain atau login.');
+      } else {
+        setError(error.message || 'Terjadi kesalahan saat pendaftaran.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Register Akun Taniku</h2>
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div>
-            <label htmlFor="namaLengkap" className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-emerald-900 p-4">
+      
+      <div className="w-full max-w-md">
+        <Link to="/" className="flex justify-center items-center mb-6 space-x-3">
+          <Leaf className="w-10 h-10 text-emerald-400" />
+          <span className="text-3xl font-bold text-white">Taniku</span>
+        </Link>
+        
+        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 p-8 rounded-2xl shadow-2xl">
+          <h2 className="text-3xl font-bold text-center text-white mb-2">Buat Akun Baru</h2>
+          <p className="text-center text-slate-300 mb-8">Bergabung dengan revolusi pertanian digital.</p>
+
+          <form onSubmit={handleRegister} className="space-y-4">
+            {/* Input fields */}
             <input
-              id="namaLengkap"
-              type="text"
-              name="namaLengkap"
-              placeholder="Masukkan nama lengkap"
-              onChange={handleChange}
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              id="namaLengkap" type="text" name="namaLengkap"
+              placeholder="Nama Lengkap" onChange={handleChange} required
+              className="w-full px-4 py-3 bg-slate-900/70 border border-slate-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
             />
-          </div>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
             <input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="Masukkan email"
-              onChange={handleChange}
-              required
-              className="mt-1bird w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              id="email" type="email" name="email"
+              placeholder="Alamat Email" onChange={handleChange} required
+              className="w-full px-4 py-3 bg-slate-900/70 border border-slate-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
             />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
             <input
-              id="password"
-              type="password"
-              name="password"
-              placeholder="Masukkan password (min. 6 karakter)"
-              onChange={handleChange}
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              id="password" type="password" name="password"
+              placeholder="Password (min. 6 karakter)" onChange={handleChange} required
+              className="w-full px-4 py-3 bg-slate-900/70 border border-slate-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
             />
-          </div>
-          <div>
-            <label htmlFor="no_wa" className="block text-sm font-medium text-gray-700">Nomor WhatsApp (Opsional)</label>
             <input
-              id="no_wa"
-              type="tel"
-              name="no_wa"
-              placeholder="Masukkan nomor WhatsApp"
-              onChange={handleChange}
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              id="no_wa" type="tel" name="no_wa"
+              placeholder="Nomor WhatsApp (Opsional)" onChange={handleChange}
+              className="w-full px-4 py-3 bg-slate-900/70 border border-slate-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
             />
-          </div>
-          <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
             <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              id="role" name="role" value={formData.role} onChange={handleChange}
+              className="w-full px-4 py-3 bg-slate-900/70 border border-slate-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all appearance-none"
             >
-              <option value="petani">Petani</option>
-              <option value="dinas">Dinas Pertanian</option>
+              <option value="petani" className="bg-slate-800">Saya seorang Petani</option>
+              <option value="dinas" className="bg-slate-800">Saya dari Dinas Pertanian</option>
             </select>
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-2 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {loading ? 'Mendaftar...' : 'Register'}
-          </button>
-        </form>
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Sudah punya akun?{' '}
-          <Link to="/login" className="text-green-600 hover:text-green-800 font-medium">
-            Login
-          </Link>
-        </p>
+            
+            {/* Success & Error Messages */}
+            {successMessage && (
+              <div className="flex items-center space-x-3 text-center text-sm text-green-300 bg-green-900/50 p-3 rounded-lg">
+                <CheckCircle className="w-5 h-5 flex-shrink-0"/>
+                <span>{successMessage}</span>
+              </div>
+            )}
+            {error && (
+              <div className="flex items-center space-x-3 text-center text-sm text-red-400 bg-red-900/50 p-3 rounded-lg">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0"/>
+                <span>{error}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || successMessage}
+              className={`w-full py-3 px-4 text-white font-bold rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 ${loading || successMessage ? 'opacity-50 cursor-not-allowed' : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700'}`}
+            >
+              {loading ? 'Mendaftarkan...' : 'Register'}
+            </button>
+          </form>
+
+          <p className="mt-8 text-center text-sm text-slate-400">
+            Sudah punya akun?{' '}
+            <Link to="/login" className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
+              Login di sini
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

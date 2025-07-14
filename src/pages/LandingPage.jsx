@@ -13,12 +13,12 @@ export default function LandingPage() {
     {
       title: "Transformasi Digital Pertanian",
       subtitle: "Memberdayakan Petani Indonesia dengan Teknologi Terdepan",
-      bg: "bg-gradient-to-br from-slate-900 via-indigo-900 to-emerald-900"
+      bg: "bg-gradient-to-br from-slate-900 via-emerald-900 to-green-900"
     },
     {
       title: "Kolaborasi dengan Dinas Pertanian",
       subtitle: "Sinergi Pemerintah dan Petani untuk Ketahanan Pangan",
-      bg: "bg-gradient-to-br from-slate-900 via-blue-900 to-teal-900"
+      bg: "bg-gradient-to-br from-slate-900 via-emerald-900 to-green-900"
     },
     {
       title: "Smart Farming Solution",
@@ -172,7 +172,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="flex items-start space-x-4">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1 shadow-lg">
+                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1 shadow-lg">
                     <span className="text-white font-bold">✓</span>
                   </div>
                   <div>
@@ -184,7 +184,7 @@ export default function LandingPage() {
             </div>
             
             <div className="relative">
-              <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-8 text-white shadow-2xl">
+              <div className="bg-gradient-to-br from-slate-900 via-emerald-900 to-green-900 rounded-3xl p-8 text-white shadow-2xl">
                 <h3 className="text-2xl font-bold mb-4">Komitmen Bersama</h3>
                 <p className="text-lg mb-6 text-slate-200 leading-relaxed">
                   "Menciptakan pertanian Indonesia yang modern, berkelanjutan, dan berdaya saing global melalui transformasi digital yang inklusif."
@@ -205,7 +205,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white">
+      <section className="py-20 bg-gradient-to-br from-slate-900 via-emerald-900 to-green-900 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">Bergabung dengan Revolusi Pertanian Digital</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-slate-300 leading-relaxed">
