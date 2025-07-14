@@ -26,6 +26,8 @@ import DetailMateri from './pages/Petani/DetailMateri';
 
 // Halaman Dinas
 import DashboardDinas from './pages/Dinas/DashboardDinas';
+import BantuanDinas from './pages/Dinas/BantuanDinas'; 
+import DetailBantuanDinas from './pages/Dinas/DetailBantuanDInas';
 
 function App() {
   const navigate = useNavigate();
@@ -76,6 +78,9 @@ function App() {
 
       {/* --- Rute untuk Dinas --- */}
       <Route path="/dinas/dashboard" element={<DashboardDinas />} />
+      <Route path="/dinas/bantuan" element={<BantuanDinas />} />
+      <Route path="/dinas/bantuan/:id" element={<DetailBantuanDinas />} /> 
+      
     </Routes>
   );
 }

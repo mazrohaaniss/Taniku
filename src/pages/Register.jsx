@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
-import { Leaf, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Leaf, CheckCircle, AlertTriangle, Loader, ChevronDown } from 'lucide-react';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -31,44 +31,37 @@ export default function Register() {
     }
     
     setLoading(true);
-    try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            nama_lengkap: formData.namaLengkap,
-            no_wa: formData.no_wa,
-            role: formData.role,
-          },
-        },
-      });
-
-      if (signUpError) throw signUpError;
-      
-      // Check if user is created but needs confirmation
-      if (data.user && !data.session) {
-         setSuccessMessage('Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi.');
-      } else {
-         setSuccessMessage('Pendaftaran berhasil! Anda akan dialihkan ke halaman login.');
-         setTimeout(() => navigate('/login'), 3000);
+    
+    // Buat pengguna di sistem otentikasi Supabase
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        // Data ini akan diteruskan ke trigger di database
+        data: {
+          nama_lengkap: formData.namaLengkap,
+          role: formData.role,
+          no_wa: formData.no_wa,
+        }
       }
+    });
 
-    } catch (error) {
-      console.error(error);
-      if (error.message.includes("User already registered")) {
-        setError('Email ini sudah terdaftar. Silakan gunakan email lain atau login.');
-      } else {
-        setError(error.message || 'Terjadi kesalahan saat pendaftaran.');
-      }
-    } finally {
+    if (authError) {
+      setError(authError.message);
       setLoading(false);
+      return;
     }
+
+    // Jika semua berhasil, tampilkan pesan sukses dan redirect ke login
+    setSuccessMessage('Pendaftaran berhasil! Anda akan dialihkan ke halaman login...');
+    setTimeout(() => {
+        navigate('/login');
+    }, 2500); // Redirect setelah 2.5 detik
+    setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-emerald-900 p-4">
-      
       <div className="w-full max-w-md">
         <Link to="/" className="flex justify-center items-center mb-6 space-x-3">
           <Leaf className="w-10 h-10 text-emerald-400" />
@@ -80,7 +73,6 @@ export default function Register() {
           <p className="text-center text-slate-300 mb-8">Bergabung dengan revolusi pertanian digital.</p>
 
           <form onSubmit={handleRegister} className="space-y-4">
-            {/* Input fields */}
             <input
               id="namaLengkap" type="text" name="namaLengkap"
               placeholder="Nama Lengkap" onChange={handleChange} required
@@ -101,15 +93,17 @@ export default function Register() {
               placeholder="Nomor WhatsApp (Opsional)" onChange={handleChange}
               className="w-full px-4 py-3 bg-slate-900/70 border border-slate-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
             />
-            <select
-              id="role" name="role" value={formData.role} onChange={handleChange}
-              className="w-full px-4 py-3 bg-slate-900/70 border border-slate-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all appearance-none"
-            >
-              <option value="petani" className="bg-slate-800">Saya seorang Petani</option>
-              <option value="dinas" className="bg-slate-800">Saya dari Dinas Pertanian</option>
-            </select>
+            <div className="relative">
+              <select
+                id="role" name="role" value={formData.role} onChange={handleChange}
+                className="w-full px-4 py-3 bg-slate-900/70 border border-slate-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all appearance-none"
+              >
+                <option value="petani" className="bg-slate-800">Saya seorang Petani</option>
+                <option value="dinas" className="bg-slate-800">Saya dari Dinas Pertanian</option>
+              </select>
+              <ChevronDown className="w-5 h-5 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
             
-            {/* Success & Error Messages */}
             {successMessage && (
               <div className="flex items-center space-x-3 text-center text-sm text-green-300 bg-green-900/50 p-3 rounded-lg">
                 <CheckCircle className="w-5 h-5 flex-shrink-0"/>
@@ -125,10 +119,10 @@ export default function Register() {
 
             <button
               type="submit"
-              disabled={loading || successMessage}
+              disabled={loading || !!successMessage}
               className={`w-full py-3 px-4 text-white font-bold rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 ${loading || successMessage ? 'opacity-50 cursor-not-allowed' : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700'}`}
             >
-              {loading ? 'Mendaftarkan...' : 'Register'}
+              {loading ? <Loader className="animate-spin w-5 h-5 mx-auto" /> : 'Register'}
             </button>
           </form>
 
