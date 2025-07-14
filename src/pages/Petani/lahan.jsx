@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Link, useLocation } from 'react-router-dom';
+import { Plus, Map, MapPin, Ruler, Wheat } from 'lucide-react';
 
 export default function Lahan() {
   const [lahanList, setLahanList] = useState([]);
@@ -14,25 +15,19 @@ export default function Lahan() {
 
     const fetchUserAndLahan = async () => {
       if (!mounted) return;
-      setLoading(true);
+      
+      // HANYA tampilkan loading screen jika data belum ada sama sekali.
+      if (lahanList.length === 0) {
+        setLoading(true);
+      }
       setError(null);
-      console.log('Fetching lahan data...'); // Debugging
 
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          setError('Sesi tidak valid. Silakan login ulang.');
-          setLoading(false);
-          return;
-        }
-
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          setError('Pengguna tidak terautentikasi. Silakan login ulang.');
-          setLoading(false);
-          return;
+          throw new Error('Pengguna tidak terautentikasi. Silakan login ulang.');
         }
-        setUser(user);
+        if (mounted) setUser(user);
 
         const { data, error: fetchError } = await supabase
           .from('lahan')
@@ -54,34 +49,62 @@ export default function Lahan() {
     return () => {
       mounted = false;
     };
-  }, [location]); // Tambahkan location sebagai dependency untuk memicu ulang saat navigasi
+  }, [location]);
 
-  if (loading) return <div className="text-center py-10 text-gray-600">Memuat data lahan...</div>;
-  if (error) return <div className="text-center py-10 bg-red-100 text-red-600">{error}</div>;
+  if (loading) return <div className="text-center py-10 text-slate-400">Memuat data lahan...</div>;
+  if (error) return <div className="text-center py-10 bg-red-900/50 text-red-400 p-4 rounded-lg">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-white p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-emerald-500">Manajemen Lahan</h1>
-        <Link to="/petani/tambahlahan" className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-emerald-700">
-          + Tambah Lahan Baru
+    <div className="text-white">
+      {/* Header Halaman */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-emerald-600">Manajemen Lahan</h1>
+          <p className="text-slate-400">Kelola semua lahan pertanian Anda di sini.</p>
+        </div>
+        <Link 
+          to="/petani/tambahlahan" 
+          className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold hover:scale-105 transition-transform shadow-lg shadow-emerald-800/20"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Tambah Lahan
         </Link>
       </div>
 
-      {lahanList.length === 0 ? (
-        <div className="text-center py-10 bg-gray-800 rounded-lg">
-          <p className="text-white">Anda belum memiliki lahan terdaftar.</p>
-          <p className="text-gray-400">Silakan tambahkan lahan baru untuk memulai.</p>
+      {/* Konten Utama */}
+      {lahanList.length === 0 && !loading ? ( // Tambahkan !loading untuk mencegah tampilan "kosong" saat masih memuat
+        <div className="text-center py-16 bg-slate-900 rounded-xl border border-slate-800">
+          <Map className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+          <p className="text-slate-400 font-semibold">Anda belum memiliki lahan terdaftar.</p>
+          <p className="text-sm text-slate-500">Klik tombol "Tambah Lahan" untuk memulai.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {lahanList.map((lahan) => (
-            <Link to={`/petani/lahan/${lahan.id}`} key={lahan.id} className="block bg-gray-800 p-6 rounded-lg hover:bg-gray-700">
-              <h2 className="text-xl font-bold text-white mb-2">{lahan.nama_lahan}</h2>
-              <p className="text-gray-400">Luas: {lahan.luas_lahan_hektar} Hektar</p>
-              <p className="text-gray-400">Lokasi: {lahan.lokasi}</p>
-              <p className="text-gray-400">Tanaman: {lahan.tanaman_sekarang || 'Tidak ada'}</p>
-              <p className="text-gray-400">Status: {lahan.status || 'Kosong'}</p>
+            <Link 
+              to={`/petani/lahan/${lahan.id}`} 
+              key={lahan.id} 
+              className="block bg-slate-900 p-6 rounded-xl border border-slate-800 hover:border-emerald-500/50 hover:-translate-y-1 transition-all duration-300 group"
+            >
+              <h2 className="text-xl font-bold text-white mb-4 group-hover:text-emerald-400 transition-colors">{lahan.nama_lahan}</h2>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center text-slate-400">
+                  <Ruler className="w-4 h-4 mr-3 text-slate-500" />
+                  <span>Luas: <span className="font-medium text-slate-300">{lahan.luas_lahan_hektar} Hektar</span></span>
+                </div>
+                <div className="flex items-center text-slate-400">
+                  <MapPin className="w-4 h-4 mr-3 text-slate-500" />
+                  <span>Lokasi: <span className="font-medium text-slate-300">{lahan.lokasi}</span></span>
+                </div>
+                <div className="flex items-center text-slate-400">
+                  <Wheat className="w-4 h-4 mr-3 text-slate-500" />
+                  <span>Tanaman: <span className="font-medium text-slate-300">{lahan.tanaman_sekarang || 'Belum ditanami'}</span></span>
+                </div>
+              </div>
+               <div className="mt-4 pt-4 border-t border-slate-800">
+                  <p className="text-xs text-slate-500">Status Lahan</p>
+                  <p className="font-semibold text-emerald-400">{lahan.status || 'Tersedia'}</p>
+              </div>
             </Link>
           ))}
         </div>

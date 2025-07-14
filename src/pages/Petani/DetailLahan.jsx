@@ -1,71 +1,96 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Leaf, Sprout, Droplet, Bug, Package } from 'lucide-react';
+import { Leaf, Sprout, Droplet, Bug, Package, ChevronLeft, Plus, MapPin, Ruler, Wheat, Edit, Trash2, X, AlertTriangle } from 'lucide-react';
 
+// FIX: Menambahkan pengaturan ikon default Leaflet agar ikon marker muncul
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+});
+
+// Komponen untuk menampilkan ikon berdasarkan jenis aktivitas
 const getIconForActivity = (jenis) => {
+  const iconProps = { className: "w-5 h-5" };
+  const containerProps = { className: "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" };
+
   switch (jenis) {
-    case 'Tanam': return <Sprout className="w-5 h-5 text-emerald-500" />;
-    case 'Pupuk': return <Package className="w-5 h-5 text-yellow-500" />;
-    case 'Air': return <Droplet className="w-5 h-5 text-blue-500" />;
-    case 'Hama': return <Bug className="w-5 h-5 text-red-500" />;
-    case 'Panen': return <Leaf className="w-5 h-5 text-green-500" />;
-    default: return null;
+    case 'Tanam': return <div {...containerProps} style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}><Sprout {...iconProps} style={{ color: '#10b981' }} /></div>;
+    case 'Pupuk': return <div {...containerProps} style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)' }}><Package {...iconProps} style={{ color: '#eab308' }} /></div>;
+    case 'Air': return <div {...containerProps} style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}><Droplet {...iconProps} style={{ color: '#3b82f6' }} /></div>;
+    case 'Hama': return <div {...containerProps} style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}><Bug {...iconProps} style={{ color: '#ef4444' }} /></div>;
+    case 'Panen': return <div {...containerProps} style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}><Leaf {...iconProps} style={{ color: '#22c55e' }} /></div>;
+    default: return <div {...containerProps} style={{ backgroundColor: 'rgba(100, 116, 139, 0.1)' }}><Leaf {...iconProps} style={{ color: '#64748b' }} /></div>;
   }
 };
 
 export default function DetailLahan() {
   const { lahanId } = useParams();
+  const navigate = useNavigate();
   const [lahan, setLahan] = useState(null);
   const [aktivitas, setAktivitas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchData = async () => {
       setLoading(true);
+      setError(null);
       try {
         const { data: lahanData, error: lahanError } = await supabase
           .from('lahan')
           .select('*')
           .eq('id', lahanId)
           .single();
-        if (lahanError) throw lahanError;
+        if (lahanError) throw new Error(`Gagal memuat detail lahan: ${lahanError.message}`);
+        if (!lahanData) throw new Error('Lahan tidak ditemukan.');
 
         const { data: aktivitasData, error: aktivitasError } = await supabase
           .from('aktivitas_lahan')
           .select('*')
           .eq('lahan_id', lahanId)
           .order('tanggal_aktivitas', { ascending: false });
-        if (aktivitasError) throw aktivitasError;
+        if (aktivitasError) throw new Error(`Gagal memuat aktivitas: ${aktivitasError.message}`);
 
         setLahan(lahanData);
         setAktivitas(aktivitasData || []);
-      } catch (error) {
-        console.error('Error fetching data:', error.message);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
+  useEffect(() => {
     fetchData();
   }, [lahanId]);
 
   useEffect(() => {
-    if (!mapRef.current || !lahan || !lahan.latitude || !lahan.longitude) return;
-
-    if (!mapInstanceRef.current) {
-      mapInstanceRef.current = L.map(mapRef.current).setView([lahan.latitude, lahan.longitude], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(mapInstanceRef.current);
-
-      L.marker([lahan.latitude, lahan.longitude], { draggable: false }).addTo(mapInstanceRef.current);
+    if (!mapRef.current || !lahan || !lahan.latitude || !lahan.longitude || mapInstanceRef.current) {
+        return;
     }
+
+    mapInstanceRef.current = L.map(mapRef.current, {
+        zoomControl: false,
+        scrollWheelZoom: false,
+        dragging: false,
+    }).setView([lahan.latitude, lahan.longitude], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors',
+    }).addTo(mapInstanceRef.current);
+
+    L.marker([lahan.latitude, lahan.longitude]).addTo(mapInstanceRef.current);
 
     return () => {
       if (mapInstanceRef.current) {
@@ -75,46 +100,201 @@ export default function DetailLahan() {
     };
   }, [lahan]);
 
-  if (loading) return <div className="text-center py-10 text-gray-600">Memuat detail lahan...</div>;
-  if (!lahan) return <div className="text-center py-10 bg-gray-800 text-white">Lahan tidak ditemukan.</div>;
+  const handleDelete = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+        // Hapus aktivitas terkait terlebih dahulu
+        const { error: aktivitasError } = await supabase.from('aktivitas_lahan').delete().eq('lahan_id', lahanId);
+        if (aktivitasError) throw aktivitasError;
+
+        // Hapus lahan
+        const { error: lahanError } = await supabase.from('lahan').delete().eq('id', lahanId);
+        if (lahanError) throw lahanError;
+
+        alert('Lahan berhasil dihapus.');
+        navigate('/petani/lahan');
+    } catch (err) {
+        setError(`Gagal menghapus lahan: ${err.message}`);
+        setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    });
+  };
+
+  if (loading && !lahan) return <div className="text-center py-10 text-slate-400">Memuat detail lahan...</div>;
+  if (error) return <div className="text-center py-10 bg-red-900/50 text-red-400 p-4 rounded-lg">{error}</div>;
+  if (!lahan) return <div className="text-center py-10 text-slate-400">Lahan tidak ditemukan.</div>;
 
   return (
-    <div className="p-6">
-      <Link to="/petani/lahan" className="text-emerald-500 hover:underline mb-4 inline-block">← Kembali ke Daftar Lahan</Link>
-
-      <div className="bg-gray-800 p-6 rounded-lg mb-6">
-        <h1 className="text-3xl font-bold text-emerald-500 mb-2">{lahan.nama_lahan}</h1>
-        <p className="text-gray-400">Luas: {lahan.luas_lahan_hektar} Hektar</p>
-        <p className="text-gray-400">Lokasi: {lahan.lokasi}</p>
-        <p className="text-gray-400">Tanaman: {lahan.tanaman_sekarang || 'Tidak ada'}</p>
-        <p className="text-gray-400">Status: {lahan.status}</p>
+    <div className="text-white">
+      {/* Header */}
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-emerald-600">{lahan.nama_lahan}</h1>
+          <p className="text-slate-400">{lahan.lokasi}</p>
+        </div>
+        <div className="flex items-center gap-4">
+            <button onClick={() => setShowEditModal(true)} className="inline-flex items-center text-sm text-slate-300 hover:text-white"><Edit className="w-4 h-4 mr-2" /> Edit</button>
+            <button onClick={() => setShowDeleteModal(true)} className="inline-flex items-center text-sm text-red-500 hover:text-red-400"><Trash2 className="w-4 h-4 mr-2" /> Hapus</button>
+            <Link to="/petani/lahan" className="inline-flex items-center text-sm text-emerald-400 hover:text-emerald-300">
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Kembali
+            </Link>
+        </div>
       </div>
 
-      <div ref={mapRef} style={{ height: '200px', width: '100%', marginBottom: '1rem', borderRadius: '4px' }}></div>
-
-      <Link to={`/petani/lahan/${lahanId}/tambahaktivitas`} className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-emerald-700 mb-6">
-        + Tambah Catatan Aktivitas
-      </Link>
-
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <h2 className="text-2xl font-bold text-white mb-4">Buku Harian Lahan</h2>
-        {aktivitas.length === 0 ? (
-          <p className="text-gray-400">Belum ada aktivitas untuk lahan ini. Mulai tambahkan aktivitas!</p>
-        ) : (
-          <div className="space-y-4">
-            {aktivitas.map((act) => (
-              <div key={act.id} className="flex items-start space-x-4">
-                {getIconForActivity(act.jenis_aktivitas)}
-                <div>
-                  <h3 className="text-white font-semibold">{act.jenis_aktivitas} - {act.deskripsi || 'Tanpa deskripsi'}</h3>
-                  <p className="text-gray-400">{new Date(act.tanggal_aktivitas).toLocaleDateString()}</p>
-                  {act.jumlah && <p className="text-gray-400">{act.jumlah} {act.satuan || 'unit'}</p>}
-                </div>
-              </div>
-            ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Kolom Kiri: Detail dan Aktivitas */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Detail Card */}
+          <div className="bg-slate-900 p-6 rounded-xl border border-slate-800">
+            <h2 className="text-xl font-bold text-white mb-4">Detail Lahan</h2>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+                <InfoItem icon={<Ruler />} label="Luas" value={`${lahan.luas_lahan_hektar} Hektar`} />
+                <InfoItem icon={<Wheat />} label="Tanaman Saat Ini" value={lahan.tanaman_sekarang || 'Belum ditanami'} />
+                <InfoItem icon={<MapPin />} label="Koordinat" value={`${parseFloat(lahan.latitude).toFixed(4)}, ${parseFloat(lahan.longitude).toFixed(4)}`} />
+                <InfoItem icon={<Leaf />} label="Status" value={lahan.status} />
+            </div>
           </div>
-        )}
+
+          {/* Aktivitas Card */}
+          <div className="bg-slate-900 rounded-xl border border-slate-800">
+            <div className="flex justify-between items-center p-6 border-b border-slate-800">
+                <h2 className="text-xl font-bold text-white">Buku Harian Lahan</h2>
+                <Link to={`/petani/lahan/${lahanId}/tambahaktivitas`} className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Tambah Aktivitas
+                </Link>
+            </div>
+            {aktivitas.length === 0 ? (
+              <p className="text-slate-400 text-center py-12">Belum ada aktivitas tercatat.</p>
+            ) : (
+              <div className="divide-y divide-slate-800">
+                {aktivitas.map((act) => (
+                  <div key={act.id} className="flex items-center space-x-4 p-6 hover:bg-slate-800/50">
+                    {getIconForActivity(act.jenis_aktivitas)}
+                    <div className="flex-grow">
+                      <p className="font-semibold text-white">{act.jenis_aktivitas}</p>
+                      <p className="text-sm text-slate-300">{act.deskripsi || 'Tidak ada deskripsi'}</p>
+                    </div>
+                    <div className="text-right text-sm">
+                        <p className="text-slate-400">{formatDate(act.tanggal_aktivitas)}</p>
+                        {act.jumlah && <p className="text-slate-500">{act.jumlah} {act.satuan || ''}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Kolom Kanan: Peta */}
+        <div className="bg-slate-900 p-6 rounded-xl border border-slate-800">
+            <h2 className="text-xl font-bold text-white mb-4">Lokasi Peta</h2>
+            <div ref={mapRef} className="h-80 w-full rounded-lg border border-slate-700 z-0"></div>
+        </div>
       </div>
+      {showEditModal && <EditLahanModal lahan={lahan} onClose={() => setShowEditModal(false)} onSaved={fetchData} />}
+      {showDeleteModal && <DeleteConfirmationModal onConfirm={handleDelete} onCancel={() => setShowDeleteModal(false)} loading={loading} />}
     </div>
   );
+}
+
+const InfoItem = ({ icon, label, value }) => (
+    <div className="flex items-start">
+        <div className="text-slate-500 mt-1 mr-3 flex-shrink-0">{icon}</div>
+        <div>
+            <p className="text-xs text-slate-400">{label}</p>
+            <p className="font-semibold text-white">{value}</p>
+        </div>
+    </div>
+);
+
+// Modal untuk Edit Lahan
+function EditLahanModal({ lahan, onClose, onSaved }) {
+    const [formData, setFormData] = useState({ ...lahan });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        try {
+            const { error: updateError } = await supabase
+                .from('lahan')
+                .update({
+                    nama_lahan: formData.nama_lahan,
+                    luas_lahan_hektar: parseFloat(formData.luas_lahan_hektar),
+                    lokasi: formData.lokasi,
+                    tanaman_sekarang: formData.tanaman_sekarang,
+                    status: formData.status,
+                })
+                .eq('id', lahan.id);
+            if (updateError) throw updateError;
+            onSaved(); // Panggil fungsi untuk fetch data ulang
+            onClose(); // Tutup modal
+        } catch (err) {
+            setError(`Gagal memperbarui: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-md w-full mx-4">
+                <form onSubmit={handleSubmit} className="p-6">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold text-white">Edit Lahan</h2>
+                        <button type="button" onClick={onClose} className="text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
+                    </div>
+                    <div className="space-y-4">
+                        <input name="nama_lahan" value={formData.nama_lahan} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" />
+                        <input name="luas_lahan_hektar" type="number" value={formData.luas_lahan_hektar} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" />
+                        <input name="lokasi" value={formData.lokasi} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" />
+                        <input name="tanaman_sekarang" value={formData.tanaman_sekarang} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" />
+                        <select name="status" value={formData.status} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg">
+                            <option>Tersedia</option>
+                            <option>Ditanami</option>
+                            <option>Panen</option>
+                        </select>
+                    </div>
+                    {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
+                    <div className="flex gap-4 pt-6">
+                        <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg">Batal</button>
+                        <button type="submit" disabled={loading} className="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-lg font-semibold disabled:opacity-50">{loading ? 'Menyimpan...' : 'Simpan Perubahan'}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+// Modal untuk Konfirmasi Hapus
+function DeleteConfirmationModal({ onConfirm, onCancel, loading }) {
+    return (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-sm w-full mx-4 p-6 text-center">
+                <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                <h2 className="text-xl font-bold text-white mb-2">Anda Yakin?</h2>
+                <p className="text-slate-400 mb-6 text-sm">Aksi ini tidak dapat dibatalkan. Semua data aktivitas terkait lahan ini juga akan terhapus secara permanen.</p>
+                <div className="flex gap-4">
+                    <button onClick={onCancel} disabled={loading} className="flex-1 px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg">Batal</button>
+                    <button onClick={onConfirm} disabled={loading} className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-semibold disabled:opacity-50">{loading ? 'Menghapus...' : 'Ya, Hapus'}</button>
+                </div>
+            </div>
+        </div>
+    );
 }

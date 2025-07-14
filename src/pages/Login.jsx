@@ -13,16 +13,14 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(''); // Reset error message
+    setError(''); 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
         password: password,
       });
       if (error) throw error;
-      // Jika berhasil, navigate akan ditangani oleh listener di App.jsx
-      // Namun kita bisa juga navigate langsung dari sini jika diperlukan
-      // navigate('/dashboard'); 
+
     } catch (error) {
       setError(error.message || 'Terjadi kesalahan saat login.');
       console.error(error);
