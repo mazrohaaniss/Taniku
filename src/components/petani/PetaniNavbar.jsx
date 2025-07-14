@@ -41,7 +41,6 @@ export default function PetaniNavbar() {
     { to: "/petani/lahan", text: "Lahan Saya" },
     { to: "/petani/bantuan", text: "Bantuan" },
     { to: "/petani/konsultasi", text: "Konsultasi" },
-    { to: "/petani/pasar", text: "Pasar" },
     { to: "/petani/edukasi", text: "Edukasi" },
   ];
 
@@ -75,6 +74,11 @@ export default function PetaniNavbar() {
               </button>
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-slate-800 rounded-md shadow-lg py-1 border border-slate-700">
+                  <Link to="/petani/profil" className="flex items-center w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700">
+                    <User className="w-4 h-4 mr-2" />
+                    Profil Saya
+                  </Link>
+                  <hr className="border-slate-700 my-1"/>
                   <button onClick={handleLogout} className="flex items-center w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/50">
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout
@@ -100,6 +104,10 @@ export default function PetaniNavbar() {
                 </NavLink>
               ))}
                <hr className="border-slate-700 my-2"/>
+               <Link to="/petani/profil" onClick={() => setIsMenuOpen(false)} className="flex items-center w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-md">
+                    <User className="w-4 h-4 mr-2" />
+                    Profil Saya
+                </Link>
                <button onClick={handleLogout} className="flex items-center w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-900/50 rounded-md">
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout

@@ -9,6 +9,7 @@ import Login from './pages/Login';
 
 // Layout & Halaman Petani (pastikan path huruf kecil konsisten)
 import DashboardPetani from './pages/Petani/DashboardPetani';
+import Profil from './pages/Petani/profil';
 import Lahan from './pages/Petani/lahan';
 import TambahLahan from './pages/Petani/TambahLahan';
 import DetailLahan from './pages/Petani/DetailLahan';
@@ -16,11 +17,12 @@ import TambahAktivitas from './pages/Petani/TambahAktivitas';
 import Bantuan from './pages/Petani/bantuan';
 import TambahBantuan from './pages/Petani/TambahBantuan'; 
 import DetailPengajuan from './pages/Petani/DetailPengajuan';
-import Pasar from './pages/petani/pasar';
 import Konsultasi from './pages/Petani/konsultasi';
 import TambahTopik from './pages/Petani/TambahTopik';
 import DetailTopik from './pages/Petani/DetailTopik';
 import Edukasi from './pages/Petani/edukasi';
+import DetailMateri from './pages/Petani/DetailMateri';
+
 
 // Halaman Dinas
 import DashboardDinas from './pages/Dinas/DashboardDinas';
@@ -58,6 +60,7 @@ function App() {
       
        {/* --- Rute untuk Petani --- */}
       <Route path="/petani/dashboard" element={<DashboardPetani />} />
+      <Route path="/petani/profil" element={<Profil />} />
       <Route path="/petani/lahan" element={<Lahan />} />
       <Route path="/petani/tambahlahan" element={<TambahLahan />} />
       <Route path="/petani/lahan/:lahanId" element={<DetailLahan />} />
@@ -68,8 +71,8 @@ function App() {
       <Route path="/petani/konsultasi" element={<Konsultasi />} />
       <Route path="/petani/konsultasi/tambah" element={<TambahTopik />} />
       <Route path="/petani/konsultasi/:topikId" element={<DetailTopik />} />
-      <Route path="/petani/pasar" element={<Pasar />} />
       <Route path="/petani/edukasi" element={<Edukasi />} />
+      <Route path="/petani/edukasi/:materiId" element={<DetailMateri />} />
 
       {/* --- Rute untuk Dinas --- */}
       <Route path="/dinas/dashboard" element={<DashboardDinas />} />
