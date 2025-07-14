@@ -1,33 +1,32 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Link, useLocation } from 'react-router-dom';
-import { Plus, Map, MapPin, Ruler, Wheat } from 'lucide-react';
+import PetaniNavbar from '../../components/petani/PetaniNavbar';
+import Footer from '../../components/petani/Footer';
+import { Plus, Map, MapPin, Ruler, Wheat, ArrowRight } from 'lucide-react';
+
+// Komponen untuk menampilkan info item dengan ikon
+const InfoItem = ({ icon, label, value }) => (
+    <div className="flex items-center text-slate-400">
+        <div className="mr-3 text-slate-500">{icon}</div>
+        <span>{label}: <span className="font-medium text-slate-200">{value}</span></span>
+    </div>
+);
 
 export default function Lahan() {
   const [lahanList, setLahanList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
-  const location = useLocation(); // Untuk memicu ulang useEffect saat navigasi
+  const location = useLocation();
 
+  // Logika untuk mengambil data lahan dari Supabase
   useEffect(() => {
-    let mounted = true;
-
     const fetchUserAndLahan = async () => {
-      if (!mounted) return;
-      
-      // HANYA tampilkan loading screen jika data belum ada sama sekali.
-      if (lahanList.length === 0) {
-        setLoading(true);
-      }
+      if (lahanList.length === 0) setLoading(true);
       setError(null);
-
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          throw new Error('Pengguna tidak terautentikasi. Silakan login ulang.');
-        }
-        if (mounted) setUser(user);
+        if (!user) throw new Error('Pengguna tidak terautentikasi.');
 
         const { data, error: fetchError } = await supabase
           .from('lahan')
@@ -36,79 +35,92 @@ export default function Lahan() {
           .order('created_at', { ascending: false });
 
         if (fetchError) throw fetchError;
-        if (mounted) setLahanList(data || []);
+        setLahanList(data || []);
       } catch (error) {
-        if (mounted) setError(`Gagal memuat data lahan: ${error.message}`);
-        console.error('Error fetching lahan data:', error);
+        setError(`Gagal memuat data lahan: ${error.message}`);
       } finally {
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
     };
-
     fetchUserAndLahan();
-    return () => {
-      mounted = false;
-    };
   }, [location]);
 
-  if (loading) return <div className="text-center py-10 text-slate-400">Memuat data lahan...</div>;
-  if (error) return <div className="text-center py-10 bg-red-900/50 text-red-400 p-4 rounded-lg">{error}</div>;
+  // Tampilan saat loading
+  if (loading) return (
+      <div className="bg-slate-900 min-h-screen flex items-center justify-center text-white">
+          Memuat data lahan...
+      </div>
+  );
+
+  // Tampilan saat terjadi error
+  if (error) return (
+      <div className="bg-slate-900 min-h-screen flex items-center justify-center text-red-400">
+          {error}
+      </div>
+  );
 
   return (
-    <div className="text-white">
-      {/* Header Halaman */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-emerald-600">Manajemen Lahan</h1>
-          <p className="text-slate-400">Kelola semua lahan pertanian Anda di sini.</p>
+    <div className="bg-slate-900 min-h-screen">
+      <PetaniNavbar />
+      <main className="container mx-auto px-4 py-12 pt-28 md:pt-32">
+        {/* Hero Section Halaman */}
+        <div className="text-center mb-16">
+            <h1 className="text-4xl md:text-6xl font-extrabold text-white bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-300 leading-tight">
+                Kelola Surga Pertanian Anda
+            </h1>
+            <p className="text-slate-400 mt-4 max-w-2xl mx-auto text-lg">
+                Semua lahan Anda dalam satu tempat. Pantau, kelola, dan tingkatkan produktivitas dengan mudah.
+            </p>
         </div>
-        <Link 
-          to="/petani/tambahlahan" 
-          className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold hover:scale-105 transition-transform shadow-lg shadow-emerald-800/20"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Tambah Lahan
-        </Link>
-      </div>
 
-      {/* Konten Utama */}
-      {lahanList.length === 0 && !loading ? ( // Tambahkan !loading untuk mencegah tampilan "kosong" saat masih memuat
-        <div className="text-center py-16 bg-slate-900 rounded-xl border border-slate-800">
-          <Map className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400 font-semibold">Anda belum memiliki lahan terdaftar.</p>
-          <p className="text-sm text-slate-500">Klik tombol "Tambah Lahan" untuk memulai.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {lahanList.map((lahan) => (
+        {/* Tombol Aksi Utama */}
+        <div className="mb-10 flex justify-center">
             <Link 
-              to={`/petani/lahan/${lahan.id}`} 
-              key={lahan.id} 
-              className="block bg-slate-900 p-6 rounded-xl border border-slate-800 hover:border-emerald-500/50 hover:-translate-y-1 transition-all duration-300 group"
+              to="/petani/tambahlahan" 
+              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-2xl shadow-emerald-800/30"
             >
-              <h2 className="text-xl font-bold text-white mb-4 group-hover:text-emerald-400 transition-colors">{lahan.nama_lahan}</h2>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center text-slate-400">
-                  <Ruler className="w-4 h-4 mr-3 text-slate-500" />
-                  <span>Luas: <span className="font-medium text-slate-300">{lahan.luas_lahan_hektar} Hektar</span></span>
-                </div>
-                <div className="flex items-center text-slate-400">
-                  <MapPin className="w-4 h-4 mr-3 text-slate-500" />
-                  <span>Lokasi: <span className="font-medium text-slate-300">{lahan.lokasi}</span></span>
-                </div>
-                <div className="flex items-center text-slate-400">
-                  <Wheat className="w-4 h-4 mr-3 text-slate-500" />
-                  <span>Tanaman: <span className="font-medium text-slate-300">{lahan.tanaman_sekarang || 'Belum ditanami'}</span></span>
-                </div>
-              </div>
-               <div className="mt-4 pt-4 border-t border-slate-800">
-                  <p className="text-xs text-slate-500">Status Lahan</p>
-                  <p className="font-semibold text-emerald-400">{lahan.status || 'Tersedia'}</p>
-              </div>
+              <Plus className="w-6 h-6" />
+              <span>Tambah Lahan Baru</span>
             </Link>
-          ))}
         </div>
-      )}
+
+        {/* Konten Utama: Daftar Lahan atau Tampilan Kosong */}
+        {lahanList.length === 0 ? (
+          <div className="text-center py-24 bg-slate-800/50 rounded-2xl border border-dashed border-slate-700">
+            <Map className="w-16 h-16 text-slate-600 mx-auto mb-6" />
+            <p className="text-slate-300 font-semibold text-xl">Anda belum memiliki lahan terdaftar.</p>
+            <p className="text-sm text-slate-500 mt-2">Mari mulai dengan menambahkan lahan pertama Anda.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {lahanList.map((lahan) => (
+              <Link 
+                to={`/petani/lahan/${lahan.id}`} 
+                key={lahan.id} 
+                className="block bg-slate-800/50 p-6 rounded-2xl border border-slate-800 hover:border-emerald-500/50 hover:-translate-y-2 transition-all duration-300 group shadow-lg"
+              >
+                <div className="flex justify-between items-start">
+                    <h2 className="text-2xl font-bold text-white mb-4 transition-colors">{lahan.nama_lahan}</h2>
+                    <div className="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-900/50 text-emerald-300 border border-emerald-700/50">
+                        {lahan.status || 'Tersedia'}
+                    </div>
+                </div>
+                <div className="space-y-3 text-sm mb-6">
+                  <InfoItem icon={<Ruler />} label="Luas" value={`${lahan.luas_lahan_hektar} Hektar`} />
+                  <InfoItem icon={<MapPin />} label="Lokasi" value={lahan.lokasi} />
+                  <InfoItem icon={<Wheat />} label="Tanaman" value={lahan.tanaman_sekarang || 'Belum ditanami'} />
+                </div>
+                <div className="mt-4 pt-4 border-t border-slate-700/50 flex justify-end">
+                    <div className="inline-flex items-center text-emerald-400 font-semibold group-hover:gap-3 transition-all">
+                        Lihat Detail <ArrowRight className="w-4 h-4 ml-2" />
+                    </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </main>
+      <Footer />
     </div>
   );
 }

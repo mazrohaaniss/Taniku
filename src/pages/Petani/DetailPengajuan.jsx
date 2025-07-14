@@ -1,6 +1,32 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ChevronLeft, Edit, Trash2, X, AlertTriangle, CheckCircle, Package, Tractor, BookOpen } from 'lucide-react';
+
+// Komponen untuk Status Badge
+const StatusBadge = ({ status }) => {
+  const baseClasses = "px-2.5 py-1 text-xs font-semibold rounded-full";
+  let specificClasses = "bg-yellow-900/50 text-yellow-300"; // Default: Diajukan
+
+  if (status === 'Disetujui') {
+    specificClasses = "bg-green-900/50 text-green-300";
+  } else if (status === 'Ditolak') {
+    specificClasses = "bg-red-900/50 text-red-300";
+  }
+  
+  return <span className={`${baseClasses} ${specificClasses}`}>{status}</span>;
+};
+
+const getIconForBantuan = (jenis) => {
+    const iconProps = { className: "w-8 h-8 text-emerald-400" };
+    switch(jenis) {
+        case 'Pupuk': return <Package {...iconProps} />;
+        case 'Bibit': return <CheckCircle {...iconProps} />;
+        case 'Alat': return <Tractor {...iconProps} />;
+        case 'Pelatihan': return <BookOpen {...iconProps} />;
+        default: return null;
+    }
+}
 
 export default function DetailPengajuan() {
   const { id } = useParams();
@@ -8,8 +34,7 @@ export default function DetailPengajuan() {
   const [pengajuan, setPengajuan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({});
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     const fetchPengajuan = async () => {
@@ -23,8 +48,9 @@ export default function DetailPengajuan() {
           .single();
 
         if (fetchError) throw fetchError;
+        if (!data) throw new Error("Pengajuan tidak ditemukan.");
+        
         setPengajuan(data);
-        setEditData(data);
       } catch (error) {
         setError(`Gagal memuat detail pengajuan: ${error.message}`);
       } finally {
@@ -35,103 +61,124 @@ export default function DetailPengajuan() {
     fetchPengajuan();
   }, [id]);
 
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
-
-  const handleSave = async () => {
+  const handleDelete = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { error: deleteError } = await supabase
         .from('pengajuan_bantuan')
-        .update({
-          deskripsi: editData.deskripsi,
-          jumlah: editData.jumlah ? parseFloat(editData.jumlah) : null,
-        })
+        .delete()
         .eq('id', id);
 
-      if (error) throw error;
-
-      setPengajuan((prev) => ({ ...prev, deskripsi: editData.deskripsi, jumlah: editData.jumlah }));
-      setIsEditing(false);
-      alert('Pengajuan berhasil diperbarui!');
+      if (deleteError) throw deleteError;
+      
+      alert('Pengajuan berhasil dihapus.');
+      navigate('/petani/bantuan');
     } catch (error) {
-      setError(`Gagal memperbarui pengajuan: ${error.message}`);
+      setError(`Gagal menghapus pengajuan: ${error.message}`);
     } finally {
       setLoading(false);
+      setShowDeleteModal(false);
     }
   };
-
-  const handleDelete = async () => {
-    if (window.confirm('Yakin ingin menghapus pengajuan ini?')) {
-      try {
-        const { error } = await supabase
-          .from('pengajuan_bantuan')
-          .delete()
-          .eq('id', id);
-
-        if (error) throw error;
-
-        navigate('/petani/bantuan');
-        alert('Pengajuan berhasil dihapus!');
-      } catch (error) {
-        setError(`Gagal menghapus pengajuan: ${error.message}`);
-      }
-    }
+  
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
   };
 
-  if (loading) return <div className="text-center py-10 text-gray-600">Memuat detail pengajuan...</div>;
-  if (error) return <div className="text-center py-10 bg-red-100 text-red-600">{error}</div>;
-  if (!pengajuan) return <div className="text-center py-10 text-gray-600">Pengajuan tidak ditemukan.</div>;
+
+  if (loading) return <div className="text-center py-10 text-slate-400">Memuat detail pengajuan...</div>;
+  if (error) return <div className="text-center py-10 bg-red-900/50 text-red-400 p-4 rounded-lg">{error}</div>;
+  if (!pengajuan) return <div className="text-center py-10 text-slate-400">Pengajuan tidak ditemukan.</div>;
 
   return (
-    <div className="min-h-screen bg-white p-6">
-      <h1 className="text-3xl font-bold text-emerald-500 mb-6">Detail Pengajuan</h1>
-      <div className="max-w-md mx-auto bg-gray-100 p-6 rounded-lg shadow-md">
-        {isEditing ? (
-          <>
-            <textarea
-              value={editData.deskripsi}
-              onChange={(e) => setEditData((prev) => ({ ...prev, deskripsi: e.target.value }))}
-              className="w-full p-2 border border-gray-300 rounded mb-2"
-            />
-            {(pengajuan.jenis_bantuan === 'Pupuk' || pengajuan.jenis_bantuan === 'Bibit') && (
-              <input
-                type="number"
-                value={editData.jumlah}
-                onChange={(e) => setEditData((prev) => ({ ...prev, jumlah: e.target.value }))}
-                className="w-full p-2 border border-gray-300 rounded mb-2"
-              />
-            )}
-            <button onClick={handleSave} className="w-full bg-emerald-600 text-white p-2 rounded hover:bg-emerald-700">
-              Simpan
-            </button>
-            <button onClick={() => setIsEditing(false)} className="w-full mt-2 bg-gray-300 text-gray-900 p-2 rounded hover:bg-gray-400">
-              Batal
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="text-gray-900 font-medium">Jenis Bantuan: {pengajuan.jenis_bantuan}</p>
-            <p className="text-gray-600 mt-2">Deskripsi: {pengajuan.deskripsi}</p>
-            {pengajuan.jumlah && <p className="text-gray-600 mt-2">Jumlah: {pengajuan.jumlah} {pengajuan.satuan}</p>}
-            {pengajuan.foto_url && <img src={pengajuan.foto_url} alt="Foto Bukti" className="mt-4 w-full h-48 object-cover rounded" />}
-            <p className="text-gray-600 mt-2">Status: <span className={pengajuan.status === 'Diajukan' ? 'text-yellow-600' : pengajuan.status === 'Disetujui' ? 'text-green-600' : 'text-red-600'}>{pengajuan.status}</span></p>
-            <p className="text-gray-500 mt-2">Diajukan: {new Date(pengajuan.created_at).toLocaleDateString('id-ID')}</p>
-            {pengajuan.catatan && <p className="text-gray-600 mt-2">Catatan Dinas: {pengajuan.catatan}</p>}
-            <div className="mt-4 space-x-2">
-              <button onClick={handleEdit} className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Edit</button>
-              <button onClick={handleDelete} className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Hapus</button>
-            </div>
-          </>
-        )}
-        <button
-          onClick={() => navigate('/petani/bantuan')}
-          className="mt-4 w-full bg-emerald-600 text-white p-2 rounded hover:bg-emerald-700"
-        >
-          Kembali
-        </button>
+    <div className="text-white">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-emerald-600">Detail Pengajuan</h1>
+          <p className="text-slate-400">#{pengajuan.id}</p>
+        </div>
+        <Link to="/petani/bantuan" className="inline-flex items-center text-sm text-emerald-400 hover:text-emerald-300">
+          <ChevronLeft className="w-4 h-4 mr-1" />
+          Kembali ke Riwayat Bantuan
+        </Link>
       </div>
+
+      {/* Konten Detail */}
+      <div className="bg-slate-900 p-8 rounded-xl border border-slate-800 max-w-3xl mx-auto">
+        <div className="flex flex-col sm:flex-row items-start gap-8">
+            <div className="p-4 bg-slate-800 rounded-lg">
+                {getIconForBantuan(pengajuan.jenis_bantuan)}
+            </div>
+            <div className="flex-grow">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <p className="text-slate-400 text-sm">Jenis Bantuan</p>
+                        <h2 className="text-2xl font-bold text-white mb-2">{pengajuan.jenis_bantuan}</h2>
+                    </div>
+                    <StatusBadge status={pengajuan.status} />
+                </div>
+                
+                <p className="text-slate-400 text-sm mt-4">Deskripsi Kebutuhan:</p>
+                <p className="text-slate-200 whitespace-pre-wrap">{pengajuan.deskripsi}</p>
+
+                {pengajuan.jumlah && (
+                    <p className="text-slate-400 text-sm mt-4">Jumlah Diajukan: <span className="font-semibold text-slate-200">{pengajuan.jumlah} {pengajuan.satuan}</span></p>
+                )}
+                
+                <p className="text-slate-400 text-sm mt-4">Tanggal Pengajuan:</p>
+                <p className="text-slate-200">{formatDate(pengajuan.created_at)}</p>
+
+            </div>
+        </div>
+
+        {pengajuan.foto_url && (
+            <div className="mt-6 pt-6 border-t border-slate-800">
+                <p className="text-slate-400 text-sm mb-2">Foto Pendukung:</p>
+                <img src={pengajuan.foto_url} alt="Foto Pendukung" className="max-w-sm w-full h-auto object-cover rounded-lg border border-slate-700" />
+            </div>
+        )}
+
+        {pengajuan.catatan && (
+            <div className="mt-6 pt-6 border-t border-slate-800 bg-slate-800/50 p-4 rounded-lg">
+                <p className="text-slate-400 text-sm mb-2">Catatan dari Dinas:</p>
+                <p className="text-slate-200 whitespace-pre-wrap">{pengajuan.catatan}</p>
+            </div>
+        )}
+
+        <div className="mt-8 pt-6 border-t border-slate-800 flex justify-end">
+             <button 
+                onClick={() => setShowDeleteModal(true)} 
+                disabled={pengajuan.status !== 'Diajukan'}
+                className="inline-flex items-center px-4 py-2 bg-red-600/20 text-red-400 rounded-lg font-semibold text-sm hover:bg-red-600/40 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Hapus Pengajuan
+            </button>
+        </div>
+      </div>
+      {showDeleteModal && <DeleteConfirmationModal onConfirm={handleDelete} onCancel={() => setShowDeleteModal(false)} loading={loading} />}
     </div>
   );
+}
+
+
+// Modal untuk Konfirmasi Hapus
+function DeleteConfirmationModal({ onConfirm, onCancel, loading }) {
+    return (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-sm w-full mx-4 p-6 text-center">
+                <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                <h2 className="text-xl font-bold text-white mb-2">Hapus Pengajuan?</h2>
+                <p className="text-slate-400 mb-6 text-sm">Aksi ini tidak dapat dibatalkan. Data pengajuan ini akan dihapus secara permanen.</p>
+                <div className="flex gap-4">
+                    <button onClick={onCancel} disabled={loading} className="flex-1 px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg">Batal</button>
+                    <button onClick={onConfirm} disabled={loading} className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-semibold disabled:opacity-50">{loading ? 'Menghapus...' : 'Ya, Hapus'}</button>
+                </div>
+            </div>
+        </div>
+    );
 }

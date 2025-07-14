@@ -3,9 +3,11 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import PetaniNavbar from '../../components/petani/PetaniNavbar';
+import Footer from '../../components/petani/Footer';
 import { Leaf, Sprout, Droplet, Bug, Package, ChevronLeft, Plus, MapPin, Ruler, Wheat, Edit, Trash2, X, AlertTriangle } from 'lucide-react';
 
-// FIX: Menambahkan pengaturan ikon default Leaflet agar ikon marker muncul
+// Atur ikon default untuk Leaflet agar muncul dengan benar
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
@@ -13,7 +15,9 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-// Komponen untuk menampilkan ikon berdasarkan jenis aktivitas
+// --- Komponen-komponen Kecil untuk Halaman ---
+
+// Ikon untuk setiap jenis aktivitas
 const getIconForActivity = (jenis) => {
   const iconProps = { className: "w-5 h-5" };
   const containerProps = { className: "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" };
@@ -27,6 +31,19 @@ const getIconForActivity = (jenis) => {
     default: return <div {...containerProps} style={{ backgroundColor: 'rgba(100, 116, 139, 0.1)' }}><Leaf {...iconProps} style={{ color: '#64748b' }} /></div>;
   }
 };
+
+// Item info dengan ikon
+const InfoItem = ({ icon, label, value }) => (
+    <div className="flex items-start">
+        <div className="text-slate-500 mt-1 mr-3 flex-shrink-0">{icon}</div>
+        <div>
+            <p className="text-xs text-slate-400">{label}</p>
+            <p className="font-semibold text-white">{value}</p>
+        </div>
+    </div>
+);
+
+// --- Komponen Utama Halaman Detail Lahan ---
 
 export default function DetailLahan() {
   const { lahanId } = useParams();
@@ -104,11 +121,9 @@ export default function DetailLahan() {
     setLoading(true);
     setError(null);
     try {
-        // Hapus aktivitas terkait terlebih dahulu
         const { error: aktivitasError } = await supabase.from('aktivitas_lahan').delete().eq('lahan_id', lahanId);
         if (aktivitasError) throw aktivitasError;
 
-        // Hapus lahan
         const { error: lahanError } = await supabase.from('lahan').delete().eq('id', lahanId);
         if (lahanError) throw lahanError;
 
@@ -127,94 +142,88 @@ export default function DetailLahan() {
     });
   };
 
-  if (loading && !lahan) return <div className="text-center py-10 text-slate-400">Memuat detail lahan...</div>;
-  if (error) return <div className="text-center py-10 bg-red-900/50 text-red-400 p-4 rounded-lg">{error}</div>;
-  if (!lahan) return <div className="text-center py-10 text-slate-400">Lahan tidak ditemukan.</div>;
+  if (loading && !lahan) return <div className="bg-slate-900 min-h-screen flex items-center justify-center text-white">Memuat detail lahan...</div>;
+  if (error) return <div className="bg-slate-900 min-h-screen flex items-center justify-center text-red-400">{error}</div>;
+  if (!lahan) return <div className="bg-slate-900 min-h-screen flex items-center justify-center text-white">Lahan tidak ditemukan.</div>;
 
   return (
-    <div className="text-white">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-emerald-600">{lahan.nama_lahan}</h1>
-          <p className="text-slate-400">{lahan.lokasi}</p>
-        </div>
-        <div className="flex items-center gap-4">
-            <button onClick={() => setShowEditModal(true)} className="inline-flex items-center text-sm text-slate-300 hover:text-white"><Edit className="w-4 h-4 mr-2" /> Edit</button>
-            <button onClick={() => setShowDeleteModal(true)} className="inline-flex items-center text-sm text-red-500 hover:text-red-400"><Trash2 className="w-4 h-4 mr-2" /> Hapus</button>
-            <Link to="/petani/lahan" className="inline-flex items-center text-sm text-emerald-400 hover:text-emerald-300">
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Kembali
-            </Link>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Kolom Kiri: Detail dan Aktivitas */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Detail Card */}
-          <div className="bg-slate-900 p-6 rounded-xl border border-slate-800">
-            <h2 className="text-xl font-bold text-white mb-4">Detail Lahan</h2>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-                <InfoItem icon={<Ruler />} label="Luas" value={`${lahan.luas_lahan_hektar} Hektar`} />
-                <InfoItem icon={<Wheat />} label="Tanaman Saat Ini" value={lahan.tanaman_sekarang || 'Belum ditanami'} />
-                <InfoItem icon={<MapPin />} label="Koordinat" value={`${parseFloat(lahan.latitude).toFixed(4)}, ${parseFloat(lahan.longitude).toFixed(4)}`} />
-                <InfoItem icon={<Leaf />} label="Status" value={lahan.status} />
+    <div className="bg-slate-900 min-h-screen">
+        <PetaniNavbar />
+        <main className="container mx-auto px-4 py-12 pt-28 md:pt-32">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
+            <div>
+                <h1 className="text-4xl md:text-5xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-300">{lahan.nama_lahan}</h1>
+                <p className="text-slate-400 mt-2 flex items-center gap-2"><MapPin className="w-4 h-4" /> {lahan.lokasi}</p>
             </div>
-          </div>
-
-          {/* Aktivitas Card */}
-          <div className="bg-slate-900 rounded-xl border border-slate-800">
-            <div className="flex justify-between items-center p-6 border-b border-slate-800">
-                <h2 className="text-xl font-bold text-white">Buku Harian Lahan</h2>
-                <Link to={`/petani/lahan/${lahanId}/tambahaktivitas`} className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Tambah Aktivitas
+            <div className="flex items-center gap-2 flex-shrink-0">
+                <button onClick={() => setShowEditModal(true)} className="inline-flex items-center text-sm bg-slate-800 text-slate-300 hover:text-white px-3 py-2 rounded-lg transition-colors"><Edit className="w-4 h-4 mr-2" /> Edit</button>
+                <button onClick={() => setShowDeleteModal(true)} className="inline-flex items-center text-sm bg-red-900/50 text-red-400 hover:bg-red-900 px-3 py-2 rounded-lg transition-colors"><Trash2 className="w-4 h-4 mr-2" /> Hapus</button>
+                <Link to="/petani/lahan" className="inline-flex items-center text-sm bg-slate-800 text-slate-300 hover:text-white px-3 py-2 rounded-lg transition-colors">
+                    <ChevronLeft className="w-4 h-4 mr-1" />
+                    Kembali
                 </Link>
             </div>
-            {aktivitas.length === 0 ? (
-              <p className="text-slate-400 text-center py-12">Belum ada aktivitas tercatat.</p>
-            ) : (
-              <div className="divide-y divide-slate-800">
-                {aktivitas.map((act) => (
-                  <div key={act.id} className="flex items-center space-x-4 p-6 hover:bg-slate-800/50">
-                    {getIconForActivity(act.jenis_aktivitas)}
-                    <div className="flex-grow">
-                      <p className="font-semibold text-white">{act.jenis_aktivitas}</p>
-                      <p className="text-sm text-slate-300">{act.deskripsi || 'Tidak ada deskripsi'}</p>
-                    </div>
-                    <div className="text-right text-sm">
-                        <p className="text-slate-400">{formatDate(act.tanggal_aktivitas)}</p>
-                        {act.jumlah && <p className="text-slate-500">{act.jumlah} {act.satuan || ''}</p>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* Kolom Kanan: Peta */}
-        <div className="bg-slate-900 p-6 rounded-xl border border-slate-800">
-            <h2 className="text-xl font-bold text-white mb-4">Lokasi Peta</h2>
-            <div ref={mapRef} className="h-80 w-full rounded-lg border border-slate-700 z-0"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Kolom Kiri: Detail dan Aktivitas */}
+            <div className="lg:col-span-2 space-y-8">
+            {/* Detail Card */}
+            <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-800">
+                <h2 className="text-xl font-bold text-white mb-4">Detail Lahan</h2>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                    <InfoItem icon={<Ruler />} label="Luas" value={`${lahan.luas_lahan_hektar} Hektar`} />
+                    <InfoItem icon={<Wheat />} label="Tanaman Saat Ini" value={lahan.tanaman_sekarang || 'Belum ditanami'} />
+                    <InfoItem icon={<MapPin />} label="Koordinat" value={`${parseFloat(lahan.latitude).toFixed(4)}, ${parseFloat(lahan.longitude).toFixed(4)}`} />
+                    <InfoItem icon={<Leaf />} label="Status" value={lahan.status} />
+                </div>
+            </div>
+
+            {/* Aktivitas Card */}
+            <div className="bg-slate-800/50 rounded-2xl border border-slate-800">
+                <div className="flex justify-between items-center p-6 border-b border-slate-800">
+                    <h2 className="text-xl font-bold text-white">Buku Harian Lahan</h2>
+                    <Link to={`/petani/lahan/${lahanId}/tambahaktivitas`} className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Tambah Aktivitas
+                    </Link>
+                </div>
+                {aktivitas.length === 0 ? (
+                <p className="text-slate-400 text-center py-12">Belum ada aktivitas tercatat.</p>
+                ) : (
+                <div className="divide-y divide-slate-800">
+                    {aktivitas.map((act) => (
+                    <div key={act.id} className="flex items-center space-x-4 p-6 hover:bg-slate-800/50">
+                        {getIconForActivity(act.jenis_aktivitas)}
+                        <div className="flex-grow">
+                        <p className="font-semibold text-white">{act.jenis_aktivitas}</p>
+                        <p className="text-sm text-slate-300">{act.deskripsi || 'Tidak ada deskripsi'}</p>
+                        </div>
+                        <div className="text-right text-sm">
+                            <p className="text-slate-400">{formatDate(act.tanggal_aktivitas)}</p>
+                            {act.jumlah && <p className="text-slate-500">{act.jumlah} {act.satuan || ''}</p>}
+                        </div>
+                    </div>
+                    ))}
+                </div>
+                )}
+            </div>
+            </div>
+
+            {/* Kolom Kanan: Peta */}
+            <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-800">
+                <h2 className="text-xl font-bold text-white mb-4">Lokasi Peta</h2>
+                <div ref={mapRef} className="h-80 w-full rounded-lg border border-slate-700 z-0"></div>
+            </div>
         </div>
-      </div>
-      {showEditModal && <EditLahanModal lahan={lahan} onClose={() => setShowEditModal(false)} onSaved={fetchData} />}
-      {showDeleteModal && <DeleteConfirmationModal onConfirm={handleDelete} onCancel={() => setShowDeleteModal(false)} loading={loading} />}
+        {showEditModal && <EditLahanModal lahan={lahan} onClose={() => setShowEditModal(false)} onSaved={fetchData} />}
+        {showDeleteModal && <DeleteConfirmationModal onConfirm={handleDelete} onCancel={() => setShowDeleteModal(false)} loading={loading} />}
+        </main>
+        <Footer />
     </div>
   );
 }
-
-const InfoItem = ({ icon, label, value }) => (
-    <div className="flex items-start">
-        <div className="text-slate-500 mt-1 mr-3 flex-shrink-0">{icon}</div>
-        <div>
-            <p className="text-xs text-slate-400">{label}</p>
-            <p className="font-semibold text-white">{value}</p>
-        </div>
-    </div>
-);
 
 // Modal untuk Edit Lahan
 function EditLahanModal({ lahan, onClose, onSaved }) {
@@ -243,8 +252,8 @@ function EditLahanModal({ lahan, onClose, onSaved }) {
                 })
                 .eq('id', lahan.id);
             if (updateError) throw updateError;
-            onSaved(); // Panggil fungsi untuk fetch data ulang
-            onClose(); // Tutup modal
+            onSaved();
+            onClose();
         } catch (err) {
             setError(`Gagal memperbarui: ${err.message}`);
         } finally {
@@ -253,18 +262,18 @@ function EditLahanModal({ lahan, onClose, onSaved }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-md w-full">
                 <form onSubmit={handleSubmit} className="p-6">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-xl font-bold text-white">Edit Lahan</h2>
                         <button type="button" onClick={onClose} className="text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
                     </div>
                     <div className="space-y-4">
-                        <input name="nama_lahan" value={formData.nama_lahan} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" />
-                        <input name="luas_lahan_hektar" type="number" value={formData.luas_lahan_hektar} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" />
-                        <input name="lokasi" value={formData.lokasi} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" />
-                        <input name="tanaman_sekarang" value={formData.tanaman_sekarang} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" />
+                        <input name="nama_lahan" placeholder="Nama Lahan" value={formData.nama_lahan} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" />
+                        <input name="luas_lahan_hektar" placeholder="Luas (Hektar)" type="number" value={formData.luas_lahan_hektar} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" />
+                        <input name="lokasi" placeholder="Lokasi" value={formData.lokasi} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" />
+                        <input name="tanaman_sekarang" placeholder="Tanaman Saat Ini" value={formData.tanaman_sekarang} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" />
                         <select name="status" value={formData.status} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg">
                             <option>Tersedia</option>
                             <option>Ditanami</option>
@@ -285,7 +294,7 @@ function EditLahanModal({ lahan, onClose, onSaved }) {
 // Modal untuk Konfirmasi Hapus
 function DeleteConfirmationModal({ onConfirm, onCancel, loading }) {
     return (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
             <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-sm w-full mx-4 p-6 text-center">
                 <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                 <h2 className="text-xl font-bold text-white mb-2">Anda Yakin?</h2>

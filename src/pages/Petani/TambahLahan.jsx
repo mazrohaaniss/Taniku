@@ -3,7 +3,9 @@ import { supabase } from '../../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ChevronLeft, Loader, AlertTriangle, CheckCircle } from 'lucide-react';
+import PetaniNavbar from '../../components/petani/PetaniNavbar';
+import Footer from '../../components/petani/Footer';
+import { ChevronLeft, Loader, AlertTriangle, CheckCircle, MapPin } from 'lucide-react';
 
 // Atur ikon default untuk Leaflet agar muncul dengan benar
 delete L.Icon.Default.prototype._getIconUrl;
@@ -12,7 +14,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
-
 
 // Geocoding menggunakan Nominatim OpenStreetMap
 const geocodeLocation = async (location) => {
@@ -41,14 +42,13 @@ const debounce = (func, delay) => {
   };
 };
 
-
 export default function TambahLahan() {
   const [formData, setFormData] = useState({
     nama_lahan: '',
     luas_lahan_hektar: '',
     lokasi: '',
     tanaman_sekarang: '',
-    status: 'Tersedia', // Default status
+    status: 'Tersedia',
     latitude: '',
     longitude: '',
   });
@@ -62,7 +62,6 @@ export default function TambahLahan() {
   const markerRef = useRef(null);
   const navigate = useNavigate();
 
-  // Fetch user session
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -72,15 +71,10 @@ export default function TambahLahan() {
     fetchUser();
   }, [navigate]);
 
-  // Initialize map, sekarang bergantung pada 'user'
   useEffect(() => {
-    // Jangan lakukan apa-apa jika div peta belum siap atau user belum login
-    if (!mapRef.current || !user) return;
+    if (!mapRef.current || !user || mapInstanceRef.current) return;
 
-    // Cegah inisialisasi ganda
-    if (mapInstanceRef.current) return;
-
-    mapInstanceRef.current = L.map(mapRef.current).setView([-2.5489, 118.0149], 5); // Default Indonesia
+    mapInstanceRef.current = L.map(mapRef.current).setView([-2.5489, 118.0149], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '© OpenStreetMap contributors',
@@ -99,16 +93,14 @@ export default function TambahLahan() {
       setFormData((prev) => ({ ...prev, latitude: lat.toFixed(6), longitude: lng.toFixed(6) }));
     });
 
-    // Fungsi cleanup untuk menghapus peta saat komponen dibongkar
     return () => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
     };
-  }, [user]); // Jalankan efek ini HANYA setelah 'user' berhasil dimuat
+  }, [user]);
 
-  // Handle location input change with debounce
   const handleLocationChange = debounce(async (value) => {
     if (value) {
       const coords = await geocodeLocation(value);
@@ -140,13 +132,11 @@ export default function TambahLahan() {
       setError('Sesi Anda tidak valid, silakan login ulang.');
       return;
     }
-
     const luas = parseFloat(formData.luas_lahan_hektar);
     if (isNaN(luas) || luas <= 0) {
       setError('Luas lahan harus berupa angka positif.');
       return;
     }
-
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -163,78 +153,85 @@ export default function TambahLahan() {
           latitude: formData.latitude || null,
           longitude: formData.longitude || null,
         });
-
       if (insertError) throw insertError;
-
       setSuccess('Lahan baru berhasil ditambahkan! Mengalihkan...');
       setTimeout(() => navigate('/petani/lahan'), 2000);
-
     } catch (error) {
       setError(`Gagal menambahkan lahan: ${error.message}`);
-      console.error('Error submitting lahan:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!user) return <div className="text-center py-10 text-slate-400">Memuat...</div>;
+  if (!user) return <div className="bg-slate-900 min-h-screen flex items-center justify-center text-white">Memuat...</div>;
 
   return (
-    <div className="text-white">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-emerald-600">Tambah Lahan Baru</h1>
-          <p className="text-slate-400">Isi detail lahan dan tandai lokasi di peta.</p>
+    <div className="bg-slate-900 min-h-screen">
+      <PetaniNavbar />
+      <main className="container mx-auto px-4 py-12 pt-28 md:pt-32">
+        <div className="max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="text-center mb-12">
+                <h1 className="text-4xl md:text-5xl font-extrabold text-white bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-300">
+                    Daftarkan Lahan Baru Anda
+                </h1>
+                <p className="text-slate-400 mt-4 max-w-2xl mx-auto">
+                    Lengkapi detail lahan Anda dan tandai lokasinya di peta untuk memulai pengelolaan digital.
+                </p>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="bg-slate-800/50 p-8 rounded-2xl border border-slate-800 space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Kolom Kiri: Input Data */}
+                    <div className="space-y-6">
+                        <FormInput name="nama_lahan" label="Nama Lahan" placeholder="e.g., Sawah Blok A" value={formData.nama_lahan} onChange={handleChange} required />
+                        <FormInput name="luas_lahan_hektar" type="number" label="Luas (Hektar)" placeholder="e.g., 2.5" value={formData.luas_lahan_hektar} onChange={handleChange} required />
+                        <FormInput name="lokasi" label="Alamat / Lokasi" placeholder="e.g., Kec. Semarang, Jawa Tengah" value={formData.lokasi} onChange={handleChange} required />
+                        <FormInput name="tanaman_sekarang" label="Tanaman Saat Ini (Opsional)" placeholder="e.g., Padi" value={formData.tanaman_sekarang} onChange={handleChange} />
+                    </div>
+
+                    {/* Kolom Kanan: Peta */}
+                    <div className="flex flex-col">
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Tandai Lokasi di Peta</label>
+                        <div ref={mapRef} className="flex-grow w-full rounded-lg border border-slate-700 z-0 min-h-[250px]"></div>
+                        <p className="text-slate-400 text-xs mt-2 text-center">
+                            Koordinat: {formData.latitude || '...'}, {formData.longitude || '...'}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Notifikasi dan Tombol Submit */}
+                <div className="pt-6 border-t border-slate-700/50">
+                    {error && <Notification type="error" message={error} />}
+                    {success && <Notification type="success" message={success} />}
+
+                    <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                        <Link to="/petani/lahan" className="w-full sm:w-auto flex-1 text-center px-6 py-3 bg-slate-800 border border-slate-700 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors font-semibold">
+                            Batal
+                        </Link>
+                        <button
+                            type="submit"
+                            disabled={loading || success}
+                            className="w-full sm:w-auto flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-bold hover:scale-[1.02] transition-transform shadow-lg shadow-emerald-800/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {loading ? <Loader className="animate-spin w-5 h-5 mr-2" /> : <MapPin className="w-5 h-5 mr-2"/>}
+                            {loading ? 'Menyimpan...' : (success ? 'Berhasil!' : 'Simpan Lahan')}
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
-        <Link to="/petani/lahan" className="inline-flex items-center text-sm text-emerald-400 hover:text-emerald-300">
-          <ChevronLeft className="w-4 h-4 mr-1" />
-          Kembali ke Manajemen Lahan
-        </Link>
-      </div>
-
-      <form onSubmit={handleSubmit} className="bg-slate-900 p-8 rounded-xl border border-slate-800 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Kolom Kiri: Input Data */}
-          <div className="space-y-4">
-            <FormInput name="nama_lahan" placeholder="Nama Lahan (e.g., Sawah Blok A)" value={formData.nama_lahan} onChange={handleChange} required />
-            <FormInput name="luas_lahan_hektar" type="number" placeholder="Luas (Hektar)" value={formData.luas_lahan_hektar} onChange={handleChange} required />
-            <FormInput name="lokasi" placeholder="Lokasi (e.g., Kec. Semarang, Jawa Tengah)" value={formData.lokasi} onChange={handleChange} required />
-            <FormInput name="tanaman_sekarang" placeholder="Tanaman Saat Ini (opsional)" value={formData.tanaman_sekarang} onChange={handleChange} />
-          </div>
-
-          {/* Kolom Kanan: Peta */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Tandai Lokasi di Peta</label>
-            <div ref={mapRef} className="h-64 w-full rounded-lg border border-slate-700 z-0"></div>
-            <p className="text-slate-400 text-xs mt-2">
-              Koordinat: {formData.latitude || '-'}, {formData.longitude || '-'}
-            </p>
-          </div>
-        </div>
-
-        {/* Notifikasi dan Tombol Submit */}
-        <div className="pt-4 border-t border-slate-800">
-          {error && <Notification type="error" message={error} />}
-          {success && <Notification type="success" message={success} />}
-
-          <button
-            type="submit"
-            disabled={loading || success}
-            className="w-full mt-4 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold hover:scale-[1.02] transition-transform shadow-lg shadow-emerald-800/20 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? <Loader className="animate-spin w-5 h-5 mr-2" /> : null}
-            {loading ? 'Menyimpan...' : (success ? 'Berhasil!' : 'Simpan Lahan')}
-          </button>
-        </div>
-      </form>
+      </main>
+      <Footer />
     </div>
   );
 }
 
 // Komponen Pembantu
-const FormInput = ({ name, type = 'text', placeholder, value, onChange, required }) => (
+const FormInput = ({ name, type = 'text', label, placeholder, value, onChange, required }) => (
   <div>
-    <label htmlFor={name} className="block text-sm font-medium text-slate-300 mb-2">{placeholder}</label>
+    <label htmlFor={name} className="block text-sm font-medium text-slate-300 mb-2">{label}</label>
     <input
       id={name}
       name={name}
