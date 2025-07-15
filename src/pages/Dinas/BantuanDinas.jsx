@@ -36,7 +36,14 @@ export default function BantuanDinas() {
       try {
         const { data, error: fetchError } = await supabase
           .from('pengajuan_bantuan')
-          .select('id, jenis_bantuan, status, created_at, users(nama_lengkap)')
+          .select(`
+            id,
+            jenis_bantuan,
+            status,
+            created_at,
+            petani_id,
+            users (nama_lengkap)
+          `)
           .order('created_at', { ascending: false });
 
         if (fetchError) throw fetchError;
@@ -44,6 +51,7 @@ export default function BantuanDinas() {
         setFilteredList(data || []);
       } catch (err) {
         setError(`Gagal memuat data: ${err.message}`);
+        console.error('Error details:', err);
       } finally {
         setLoading(false);
       }
@@ -72,8 +80,6 @@ export default function BantuanDinas() {
               <h1 className="text-3xl font-bold text-gray-800">Manajemen Bantuan</h1>
               <p className="text-gray-500">Verifikasi dan kelola pengajuan bantuan dari petani.</p>
             </div>
-
-            {/* Filter */}
             <div className="flex items-center gap-2 border-b border-gray-200 pb-2">
               <Filter className="w-5 h-5 text-gray-500" />
               {filters.map(filter => (
@@ -86,8 +92,6 @@ export default function BantuanDinas() {
                 </button>
               ))}
             </div>
-
-            {/* Tabel Pengajuan */}
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <table className="w-full">
                 <thead className="bg-gray-50">
@@ -102,12 +106,14 @@ export default function BantuanDinas() {
                 <tbody className="divide-y divide-gray-200">
                   {loading ? (
                     <tr><td colSpan="5" className="text-center py-10 text-gray-500">Memuat data...</td></tr>
+                  ) : error ? (
+                    <tr><td colSpan="5" className="text-center py-10 text-red-500">{error}</td></tr>
                   ) : filteredList.length === 0 ? (
                     <tr><td colSpan="5" className="text-center py-10 text-gray-500">Tidak ada pengajuan ditemukan.</td></tr>
                   ) : (
                     filteredList.map(item => (
                       <tr key={item.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap font-semibold text-gray-800">{item.users.nama_lengkap}</td>
+                        <td className="px-6 py-4 whitespace-nowrap font-semibold text-gray-800">{item.users?.nama_lengkap || 'Tidak diketahui'}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-600">{item.jenis_bantuan}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-600">{formatDate(item.created_at)}</td>
                         <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={item.status} /></td>

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 import PetaniNavbar from '../../components/petani/PetaniNavbar';
 import Footer from '../../components/petani/Footer';
-import { Plus, MapPin, Calendar, Wheat, Edit2, Trash2, TrendingUp, X, Sun, Ruler, AlertTriangle, Loader } from 'lucide-react';
+import { Plus, MapPin, Calendar, Wheat, Edit2, Trash2, TrendingUp, Sun, Ruler } from 'lucide-react';
 
-// --- Komponen-komponen Kecil untuk Halaman ---
-
+// Komponen StatCard
 const StatCard = ({ icon, title, value, unit, color }) => {
   const colors = {
     emerald: 'from-emerald-500/10 to-slate-900/0',
@@ -27,6 +27,7 @@ const StatCard = ({ icon, title, value, unit, color }) => {
   );
 };
 
+// Komponen LahanCard
 const LahanCard = ({ item, onEdit, onDelete }) => {
   const getStatusColor = (status) => {
     switch (status) {
@@ -57,19 +58,13 @@ const LahanCard = ({ item, onEdit, onDelete }) => {
   );
 };
 
-// --- Komponen Utama Halaman Dashboard ---
-
+// Komponen Utama Halaman Dashboard
 export default function DashboardPetani() {
   const [user, setUser] = useState(null);
   const [lahanData, setLahanData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  const [showForm, setShowForm] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  const [formData, setFormData] = useState({
-    nama_lahan: '', luas_lahan_hektar: '', tanaman_sekarang: '', lokasi: '', status: 'Tersedia'
-  });
+  const navigate = useNavigate();
 
   // Fungsi untuk mengambil semua data
   const fetchData = async () => {
@@ -99,60 +94,8 @@ export default function DashboardPetani() {
     fetchData();
   }, []);
 
-  const openForm = (item = null) => {
-    if (item) {
-      setEditingItem(item);
-      setFormData({
-        nama_lahan: item.nama_lahan,
-        luas_lahan_hektar: item.luas_lahan_hektar,
-        tanaman_sekarang: item.tanaman_sekarang || '',
-        lokasi: item.lokasi,
-        status: item.status,
-      });
-    } else {
-      setEditingItem(null);
-      setFormData({
-        nama_lahan: '', luas_lahan_hektar: '', tanaman_sekarang: '', lokasi: '', status: 'Tersedia'
-      });
-    }
-    setShowForm(true);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const dataToSubmit = {
-        ...formData,
-        luas_lahan_hektar: parseFloat(formData.luas_lahan_hektar),
-        petani_id: user.id
-      };
-
-      if (editingItem) {
-        // Update data
-        const { error: updateError } = await supabase
-          .from('lahan')
-          .update(dataToSubmit)
-          .eq('id', editingItem.id);
-        if (updateError) throw updateError;
-      } else {
-        // Insert data baru
-        const { error: insertError } = await supabase
-          .from('lahan')
-          .insert(dataToSubmit);
-        if (insertError) throw insertError;
-      }
-      setShowForm(false);
-      fetchData(); // Ambil data terbaru setelah submit
-    } catch (err) {
-      alert(`Error: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleDelete = async (id) => {
-    if(window.confirm('Anda yakin ingin menghapus data lahan ini? Semua aktivitas terkait juga akan terhapus.')) {
+    if (window.confirm('Anda yakin ingin menghapus data lahan ini? Semua aktivitas terkait juga akan terhapus.')) {
       setLoading(true);
       try {
         const { error } = await supabase.from('lahan').delete().eq('id', id);
@@ -164,6 +107,10 @@ export default function DashboardPetani() {
         setLoading(false);
       }
     }
+  };
+
+  const handleEdit = (item) => {
+    navigate(`/petani/tambahlahan?id=${item.id}`); // Navigasi ke halaman tambahlahan dengan ID untuk edit
   };
 
   const totalLuas = lahanData.reduce((sum, item) => sum + Number(item.luas_lahan_hektar), 0);
@@ -193,42 +140,17 @@ export default function DashboardPetani() {
           <h2 className="text-2xl font-bold text-white mb-6">Lahan Anda Saat Ini</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {lahanData.map(item => (
-              <LahanCard key={item.id} item={item} onEdit={openForm} onDelete={handleDelete} />
+              <LahanCard key={item.id} item={item} onEdit={handleEdit} onDelete={handleDelete} />
             ))}
-            <button onClick={() => openForm()} className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-slate-700 text-slate-500 hover:bg-slate-800 hover:border-emerald-500 hover:text-emerald-400 transition-all">
+            <button 
+              onClick={() => navigate('/petani/tambahlahan')} 
+              className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-slate-700 text-slate-500 hover:bg-slate-800 hover:border-emerald-500 hover:text-emerald-400 transition-all"
+            >
               <Plus className="w-10 h-10 mb-2" />
               <span className="font-semibold">Tambah Lahan</span>
             </button>
           </div>
         </div>
-
-        {showForm && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-md w-full">
-              <form onSubmit={handleSubmit} className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold text-white">{editingItem ? 'Edit Lahan' : 'Tambah Lahan Baru'}</h2>
-                  <button type="button" onClick={() => setShowForm(false)} className="text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
-                </div>
-                <div className="space-y-4">
-                    <input name="nama_lahan" placeholder="Nama Lahan" value={formData.nama_lahan} onChange={(e) => setFormData({...formData, nama_lahan: e.target.value})} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" required/>
-                    <input name="lokasi" placeholder="Lokasi (Contoh: Desa Sukamaju)" value={formData.lokasi} onChange={(e) => setFormData({...formData, lokasi: e.target.value})} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" required/>
-                    <input name="luas_lahan_hektar" type="number" placeholder="Luas (Hektar)" value={formData.luas_lahan_hektar} onChange={(e) => setFormData({...formData, luas_lahan_hektar: e.target.value})} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg" required/>
-                    <input name="tanaman_sekarang" placeholder="Tanaman Saat Ini (Contoh: Padi)" value={formData.tanaman_sekarang} onChange={(e) => setFormData({...formData, tanaman_sekarang: e.target.value})} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg"/>
-                    <select name="status" value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg">
-                        <option>Tersedia</option>
-                        <option>Ditanami</option>
-                        <option>Panen</option>
-                    </select>
-                </div>
-                <div className="flex gap-4 pt-6">
-                  <button type="button" onClick={() => setShowForm(false)} className="flex-1 px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg">Batal</button>
-                  <button type="submit" disabled={loading} className="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-lg font-semibold disabled:opacity-50">{loading ? 'Menyimpan...' : 'Simpan'}</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </main>
       <Footer />
     </div>

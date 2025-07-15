@@ -3,12 +3,9 @@ import { supabase } from '../../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import PetaniNavbar from '../../components/petani/PetaniNavbar';
 import Footer from '../../components/petani/Footer';
-import { ChevronLeft, Loader, AlertTriangle, CheckCircle, UploadCloud, Send } from 'lucide-react';
+import { Loader, AlertTriangle, CheckCircle, UploadCloud, Send } from 'lucide-react';
 
-// --- Komponen Pembantu ---
-
-// Form Input yang bisa digunakan ulang dan lebih baik
-const FormInput = ({ name, type = 'text', label, placeholder, value, onChange, required, children }) => (
+const FormInput = ({ name, type = 'text', label, placeholder, value, onChange, required, children, step }) => (
   <div>
     <label htmlFor={name} className="block text-sm font-medium text-slate-300 mb-2">{label}</label>
     {type === 'select' ? (
@@ -18,12 +15,11 @@ const FormInput = ({ name, type = 'text', label, placeholder, value, onChange, r
     ) : type === 'textarea' ? (
       <textarea id={name} name={name} value={value} onChange={onChange} placeholder={placeholder} required={required} rows="4" className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all" />
     ) : (
-      <input id={name} name={name} type={type} step={type === 'number' ? '0.1' : undefined} placeholder={placeholder} value={value} onChange={onChange} required={required} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all" />
+      <input id={name} name={name} type={type} step={step} placeholder={placeholder} value={value} onChange={onChange} required={required} className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all" />
     )}
   </div>
 );
 
-// Notifikasi untuk error dan sukses
 const Notification = ({ type, message }) => {
   const baseClasses = "flex items-center space-x-3 text-center text-sm p-3 rounded-lg";
   const typeClasses = {
@@ -39,8 +35,6 @@ const Notification = ({ type, message }) => {
     </div>
   );
 };
-
-// --- Komponen Utama Halaman Tambah Bantuan ---
 
 export default function TambahBantuan() {
   const navigate = useNavigate();
@@ -141,7 +135,6 @@ export default function TambahBantuan() {
       <PetaniNavbar />
       <main className="container mx-auto px-4 py-12 pt-28 md:pt-32">
         <div className="max-w-2xl mx-auto">
-            {/* Header Halaman */}
             <div className="text-center mb-12">
                 <h1 className="text-4xl md:text-5xl font-extrabold text-white bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-300">
                     Formulir Pengajuan Bantuan
@@ -151,7 +144,6 @@ export default function TambahBantuan() {
                 </p>
             </div>
 
-            {/* Form Container */}
             <form onSubmit={handleSubmit} className="bg-slate-800/50 p-8 rounded-2xl border border-slate-800 space-y-6">
                 <FormInput type="select" name="jenis_bantuan" label="Jenis Bantuan" value={formData.jenis_bantuan} onChange={handleChange} required>
                     <option value="">-- Pilih Jenis Bantuan --</option>
@@ -164,7 +156,31 @@ export default function TambahBantuan() {
                 <FormInput type="textarea" name="deskripsi" label="Deskripsi Kebutuhan" value={formData.deskripsi} onChange={handleChange} placeholder="Jelaskan kebutuhan Anda secara rinci..." required />
 
                 {(formData.jenis_bantuan === 'Pupuk' || formData.jenis_bantuan === 'Bibit') && (
-                    <FormInput type="number" name="jumlah" label="Jumlah (kg)" value={formData.jumlah} onChange={handleChange} placeholder="Contoh: 50" required />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <FormInput 
+                        type="number" 
+                        name="jumlah" 
+                        label="Jumlah" 
+                        value={formData.jumlah} 
+                        onChange={handleChange} 
+                        placeholder="Contoh: 50" 
+                        required 
+                        step="0.1"
+                    />
+                    <FormInput 
+                        type="select" 
+                        name="satuan" 
+                        label="Satuan" 
+                        value={formData.satuan} 
+                        onChange={handleChange} 
+                        required
+                    >
+                        <option value="kg">Kilogram (kg)</option>
+                        <option value="ton">Ton</option>
+                        <option value="liter">Liter (L)</option>
+                        <option value="unit">Unit</option>
+                    </FormInput>
+                  </div>
                 )}
 
                 <div>
