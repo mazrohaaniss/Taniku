@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
-import { Leaf, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Leaf, CheckCircle, AlertTriangle, ArrowLeft, ChevronDown } from 'lucide-react';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -28,7 +28,6 @@ export default function Register() {
     setSuccess(null);
   
     try {
-      // Langkah 1: Registrasi melalui Supabase Auth
       const { data, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -43,12 +42,12 @@ export default function Register() {
   
       if (authError) throw authError;
   
-      // Langkah 2: Sinkronisasi data ke tabel users
+  
       const { user } = data;
-      if (user && user.email) { // Pastikan user.email ada
+      if (user && user.email) { 
         const { error: insertError } = await supabase.from('users').insert({
           id: user.id,
-          email: user.email, // Ambil email dari user
+          email: user.email,
           nama_lengkap: formData.namaLengkap,
           role: formData.role,
           no_wa: formData.no_wa,
@@ -70,7 +69,12 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-emerald-900 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-emerald-900 p-4 relative">
+        <Link to="/" className="absolute top-8 left-8 inline-flex items-center text-slate-300 hover:text-white transition-colors z-20 group">
+            <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Kembali ke Beranda</span>
+        </Link>
+
       <div className="w-full max-w-md">
         <Link to="/" className="flex justify-center items-center mb-6 space-x-3">
           <Leaf className="w-10 h-10 text-emerald-400" />
@@ -121,16 +125,21 @@ export default function Register() {
               onChange={handleChange}
               className="w-full px-4 py-3 bg-slate-900/70 border border-slate-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
             />
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full px-4 py-3 bg-slate-900/70 border border-slate-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all appearance-none"
-            >
-              <option value="petani">Saya seorang Petani</option>
-              <option value="dinas">Saya dari Dinas Pertanian</option>
-            </select>
+            <div className="relative">
+                <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-slate-900/70 border border-slate-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all appearance-none"
+                >
+                <option value="petani">Saya seorang Petani</option>
+                <option value="dinas">Saya dari Dinas Pertanian</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                    <ChevronDown className="w-5 h-5" />
+                </div>
+            </div>
 
             {successMessage && (
               <div className="flex items-center space-x-3 text-center text-sm text-green-300 bg-green-900/50 p-3 rounded-lg">

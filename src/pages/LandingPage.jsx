@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import { Leaf, BarChart3, Users, Shield, Target, Award, ChevronRight } from 'lucide-react';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
@@ -8,7 +9,7 @@ export default function LandingPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [scrollY, setScrollY] = useState(0);
 
-  // Data untuk slider di Hero Section
+  // Data untuk slider di Hero Section (tidak berubah)
   const heroSlides = [
     {
       title: "Transformasi Digital Pertanian",
@@ -27,13 +28,13 @@ export default function LandingPage() {
     }
   ];
 
-  // Data untuk bagian statistik
-  const stats = [
-    { number: "10,000+", label: "Petani Terdaftar", icon: Users },
-    { number: "500+", label: "Daerah Terlayani", icon: Target },
-    { number: "95%", label: "Tingkat Kepuasan", icon: Award },
-    { number: "24/7", label: "Dukungan Sistem", icon: Shield }
-  ];
+  // State untuk data statistik, diinisialisasi dengan nilai awal
+  const [statsData, setStatsData] = useState([
+    { number: "0+", label: "Petani Terdaftar", icon: Users },
+    { number: "0+", label: "Daerah Terlayani", icon: Target },
+    { number: "95%", label: "Tingkat Kepuasan", icon: Award }, // Statis
+    { number: "24/7", label: "Dukungan Sistem", icon: Shield } // Statis
+  ]);
 
   // Logika & Efek
   useEffect(() => {
@@ -43,6 +44,39 @@ export default function LandingPage() {
     const slideInterval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 5000);
+
+    // Fungsi untuk mengambil data statistik dari Supabase
+    const fetchStats = async () => {
+      try {
+        // Ambil jumlah petani
+        const { count: petaniCount, error: petaniError } = await supabase
+          .from('users')
+          .select('id', { count: 'exact' })
+          .eq('role', 'petani');
+        if (petaniError) throw petaniError;
+
+        // Ambil data lokasi dari semua lahan
+        const { data: lahanData, error: lahanError } = await supabase
+          .from('lahan')
+          .select('lokasi');
+        if (lahanError) throw lahanError;
+
+        // Hitung jumlah lokasi unik
+        const daerahCount = new Set(lahanData.map(l => l.lokasi)).size;
+
+        // Perbarui state dengan data yang sudah diambil
+        setStatsData(prevStats => [
+          { ...prevStats[0], number: (petaniCount || 0).toLocaleString('id-ID') + '+' },
+          { ...prevStats[1], number: (daerahCount || 0).toLocaleString('id-ID') + '+' },
+          ...prevStats.slice(2)
+        ]);
+
+      } catch (error) {
+        console.error("Gagal mengambil data statistik:", error.message);
+      }
+    };
+
+    fetchStats();
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -99,7 +133,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-50/50 via-transparent to-transparent" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 min-h-0">
-            {stats.map((stat, index) => {
+            {statsData.map((stat, index) => {
               const Icon = stat.icon;
               return (
                 <div key={index} className="text-center group transform hover:scale-105 transition-all duration-300">
@@ -124,7 +158,6 @@ export default function LandingPage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Feature Card 1 */}
             <div className="group bg-gradient-to-br from-white to-slate-50 p-8 rounded-3xl shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-100">
               <div className="w-16 h-16 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
                 <Leaf className="w-8 h-8 text-white" />
@@ -132,7 +165,6 @@ export default function LandingPage() {
               <h3 className="text-2xl font-bold text-slate-800 mb-4">Smart Farming</h3>
               <p className="text-slate-600 leading-relaxed">Teknologi IoT dan AI untuk monitoring tanaman real-time, prediksi cuaca, dan optimalisasi hasil panen.</p>
             </div>
-            {/* Feature Card 2 */}
             <div className="group bg-gradient-to-br from-white to-slate-50 p-8 rounded-3xl shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-100">
               <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
                 <BarChart3 className="w-8 h-8 text-white" />
@@ -140,7 +172,6 @@ export default function LandingPage() {
               <h3 className="text-2xl font-bold text-slate-800 mb-4">Data Analytics</h3>
               <p className="text-slate-600 leading-relaxed">Analisis mendalam untuk pengambilan keputusan berbasis data bersama Dinas Pertanian daerah.</p>
             </div>
-            {/* Feature Card 3 */}
             <div className="group bg-gradient-to-br from-white to-slate-50 p-8 rounded-3xl shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-100">
               <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
                 <Users className="w-8 h-8 text-white" />

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link, useNavigate } from 'react-router-dom';
-import { Leaf, AlertTriangle } from 'lucide-react';
+import { Leaf, AlertTriangle, ArrowLeft } from 'lucide-react';
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
@@ -28,7 +28,7 @@ export default function Login() {
 
       console.log('Respons login:', data);
 
-   
+    
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('role')
@@ -59,7 +59,13 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-emerald-900 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-emerald-900 p-4 relative">
+      {/* Tombol kembali dipindahkan ke luar card, di pojok kiri atas layar */}
+      <Link to="/" className="absolute top-8 left-8 inline-flex items-center text-slate-300 hover:text-white transition-colors z-20 group">
+          <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-medium">Kembali ke Beranda</span>
+      </Link>
+
       <div className="w-full max-w-md">
         <Link to="/" className="flex justify-center items-center mb-6 space-x-3">
           <Leaf className="w-10 h-10 text-emerald-400" />
@@ -124,6 +130,7 @@ export default function Login() {
               Daftar di sini
             </Link>
           </p>
+
         </div>
       </div>
     </div>
