@@ -109,7 +109,7 @@ export default function Bantuan() {
       <main className="container mx-auto px-4 py-12 pt-28 md:pt-32">
         {/* Hero Section Halaman */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-extrabold text-white bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-300 leading-tight">
+        <h1 className="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-lime-400 leading-tight mb-4">
             Pusat Bantuan Petani
           </h1>
           <p className="text-slate-400 mt-4 max-w-2xl mx-auto text-lg">

@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { Link, useLocation } from 'react-router-dom';
 import PetaniNavbar from '../../components/petani/PetaniNavbar';
 import Footer from '../../components/petani/Footer';
-import { Plus, Map, MapPin, Ruler, Wheat, ArrowRight } from 'lucide-react';
+import { Plus, Map, MapPin, Ruler, TrendingUp, Wheat, ArrowRight } from 'lucide-react';
 
 // Komponen untuk menampilkan info item dengan ikon
 const InfoItem = ({ icon, label, value }) => (
@@ -63,14 +63,19 @@ export default function Lahan() {
     <div className="bg-slate-900 min-h-screen">
       <PetaniNavbar />
       <main className="container mx-auto px-4 py-12 pt-28 md:pt-32">
-        {/* Hero Section Halaman */}
         <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-6xl font-extrabold text-white bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-300 leading-tight">
+            <h1 className="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-lime-400 leading-tight mb-4">
                 Kelola Surga Pertanian Anda
             </h1>
-            <p className="text-slate-400 mt-4 max-w-2xl mx-auto text-lg">
+            <p className="text-slate-300 mt-4 max-w-2xl mx-auto text-lg">
                 Semua lahan Anda dalam satu tempat. Pantau, kelola, dan tingkatkan produktivitas dengan mudah.
             </p>
+            <div className="flex justify-center mt-6">
+                <div className="flex items-center gap-2 text-emerald-400 text-sm">
+                    <TrendingUp className="w-4 h-4" />
+                    <span>Produktivitas meningkat 25% dengan sistem kami</span>
+                </div>
+            </div>
         </div>
 
         {/* Tombol Aksi Utama */}
