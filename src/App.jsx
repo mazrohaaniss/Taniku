@@ -29,6 +29,12 @@ import DashboardDinas from './pages/Dinas/DashboardDinas';
 import AnalisisPertanian from './pages/Dinas/AnalisisPertanian';
 import BantuanDinas from './pages/Dinas/BantuanDinas'; 
 import DetailBantuanDinas from './pages/Dinas/DetailBantuanDInas';
+import KonsultasiDinas from './pages/Dinas/KonsultasiDinas';
+import DetailTopikDinas from './pages/Dinas/DetailTopikDinas';
+import EdukasiDinas from './pages/Dinas/EdukasiDinas';
+import TambahMateri from './pages/Dinas/TambahMateri';
+import PengumumanDinas from './pages/Dinas/PengumumanDinas';
+import TambahPengumuman from './pages/Dinas/TambahPengumuman';
 
 function App() {
   const navigate = useNavigate();
@@ -82,6 +88,12 @@ function App() {
       <Route path="/dinas/analisis" element={<AnalisisPertanian />} />
       <Route path="/dinas/bantuan" element={<BantuanDinas />} />
       <Route path="/dinas/bantuan/:id" element={<DetailBantuanDinas />} /> 
+      <Route path="/dinas/konsultasi" element={<KonsultasiDinas />} />
+      <Route path="/dinas/konsultasi/:topikId" element={<DetailTopikDinas />} />
+      <Route path="/dinas/edukasi" element={<EdukasiDinas />} />
+      <Route path="/dinas/edukasi/tambah" element={<TambahMateri />} />
+      <Route path="/dinas/pengumuman" element={<PengumumanDinas />} />
+      <Route path="/dinas/pengumuman/tambah" element={<TambahPengumuman />} />
       
     </Routes>
   );
