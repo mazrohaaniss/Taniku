@@ -20,11 +20,6 @@ export default function LandingPage() {
       title: "Kolaborasi dengan Dinas Pertanian",
       subtitle: "Sinergi Pemerintah dan Petani untuk Ketahanan Pangan",
       bg: "bg-gradient-to-br from-slate-900 via-emerald-900 to-green-900"
-    },
-    {
-      title: "Smart Farming Solution",
-      subtitle: "Teknologi IoT dan AI untuk Pertanian Berkelanjutan",
-      bg: "bg-gradient-to-br from-slate-900 via-emerald-900 to-green-900"
     }
   ];
 
