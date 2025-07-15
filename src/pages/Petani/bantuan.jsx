@@ -118,10 +118,10 @@ export default function Bantuan() {
         </div>
 
         {/* Tombol Aksi dan Notifikasi */}
-        <div className="mb-8 flex justify-end">
+        <div className="mb-8 flex justify-center">
           <Link 
-              to="/petani/bantuan/tambah" 
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-full font-bold hover:scale-105 transition-transform shadow-2xl shadow-emerald-800/30"
+            to="/petani/bantuan/tambah" 
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-full font-bold hover:scale-105 transition-transform shadow-2xl shadow-emerald-800/30"
           >
             <Plus className="w-5 h-5" />
             <span>Ajukan Bantuan Baru</span>
@@ -146,7 +146,7 @@ export default function Bantuan() {
               <Link 
                 to={`/petani/bantuan/${pengajuan.id}`}
                 key={pengajuan.id}
-                className="relative block bg-slate-800/50 p-6 rounded-2xl border border-slate-800 hover:border-emerald-500/50 hover:-translate-y-1 transition-all duration-300 group"
+                className="relative block bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-emerald-500/80 hover:-translate-y-1 transition-all duration-300 group"
               >
                 <StatusBadge status={pengajuan.status} />
                 <div className="flex items-center gap-4 mb-4">

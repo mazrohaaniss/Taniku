@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import PetaniNavbar from '../../components/petani/PetaniNavbar';
 import Footer from '../../components/petani/Footer';
-import { Plus, MapPin, Calendar, Wheat, Edit2, Trash2, TrendingUp, Sun, Ruler } from 'lucide-react';
+import { Plus, MapPin, Calendar, Wheat, Edit2, Trash2, TrendingUp, Sun, Ruler, ArrowRight } from 'lucide-react';
 
-// Komponen StatCard
+// Komponen StatCard (tidak diubah, sudah bagus)
 const StatCard = ({ icon, title, value, unit, color }) => {
   const colors = {
     emerald: 'from-emerald-500/10 to-slate-900/0',
@@ -27,34 +27,44 @@ const StatCard = ({ icon, title, value, unit, color }) => {
   );
 };
 
-// Komponen LahanCard
+// Komponen LahanCard dengan desain yang disesuaikan
 const LahanCard = ({ item, onEdit, onDelete }) => {
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Ditanami': return 'bg-green-900/50 text-green-300 border-green-700/50';
-      case 'Panen': return 'bg-purple-900/50 text-purple-300 border-purple-700/50';
-      default: return 'bg-slate-700 text-slate-300 border-slate-600'; // Tersedia
+    const lowerStatus = status?.toLowerCase() || 'tersedia';
+    switch (lowerStatus) {
+      case 'ditanami':
+      case 'aktif':
+        return 'bg-green-900/50 text-green-300 border-green-700/50';
+      case 'panen':
+        return 'bg-purple-900/50 text-purple-300 border-purple-700/50';
+      default: // Tersedia, Kosong, dll.
+        return 'bg-slate-700 text-slate-300 border-slate-600';
     }
   };
 
   return (
-    <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-800 group relative">
+    // Menggunakan gaya dari halaman Lahan yang sudah disetujui
+    <Link 
+      to={`/petani/lahan/${item.id}`}
+      className="group bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-emerald-500 hover:-translate-y-1 transition-all duration-300"
+    >
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-xl font-bold text-white">{item.nama_lahan}</h3>
         <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusColor(item.status)}`}>
-          {item.status}
+          {item.status || 'Tersedia'}
         </span>
       </div>
-      <div className="space-y-2 text-sm text-slate-400 mb-4">
-        <p><MapPin className="inline w-4 h-4 mr-2" />Lokasi: <span className="font-medium text-slate-200">{item.lokasi}</span></p>
-        <p><Ruler className="inline w-4 h-4 mr-2" />Luas: <span className="font-medium text-slate-200">{item.luas_lahan_hektar} Ha</span></p>
-        <p><Wheat className="inline w-4 h-4 mr-2" />Tanaman: <span className="font-medium text-slate-200">{item.tanaman_sekarang || 'Kosong'}</span></p>
+      <div className="space-y-2 text-sm text-slate-400 mb-6">
+        <p><Ruler className="inline w-4 h-4 mr-2 text-slate-500" />Luas: <span className="font-medium text-slate-200">{item.luas_lahan_hektar} Ha</span></p>
+        <p><MapPin className="inline w-4 h-4 mr-2 text-slate-500" />Lokasi: <span className="font-medium text-slate-200">{item.lokasi}</span></p>
+        <p><Wheat className="inline w-4 h-4 mr-2 text-slate-500" />Tanaman: <span className="font-medium text-slate-200">{item.tanaman_sekarang || 'Kosong'}</span></p>
       </div>
-      <div className="absolute top-4 right-16 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button onClick={() => onEdit(item)} className="p-1.5 rounded-md bg-slate-700 hover:bg-emerald-600"><Edit2 className="w-4 h-4" /></button>
-        <button onClick={() => onDelete(item.id)} className="p-1.5 rounded-md bg-slate-700 hover:bg-red-600"><Trash2 className="w-4 h-4" /></button>
+       <div className="mt-4 pt-4 border-t border-slate-700/50 flex justify-end">
+          <div className="inline-flex items-center text-emerald-400 font-semibold">
+              Lihat Detail <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+          </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
@@ -94,25 +104,6 @@ export default function DashboardPetani() {
     fetchData();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Anda yakin ingin menghapus data lahan ini? Semua aktivitas terkait juga akan terhapus.')) {
-      setLoading(true);
-      try {
-        const { error } = await supabase.from('lahan').delete().eq('id', id);
-        if (error) throw error;
-        fetchData(); // Ambil data terbaru setelah hapus
-      } catch (err) {
-        alert(`Error: ${err.message}`);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  const handleEdit = (item) => {
-    navigate(`/petani/tambahlahan?id=${item.id}`); // Navigasi ke halaman tambahlahan dengan ID untuk edit
-  };
-
   const totalLuas = lahanData.reduce((sum, item) => sum + Number(item.luas_lahan_hektar), 0);
   const totalLahan = lahanData.length;
 
@@ -140,7 +131,8 @@ export default function DashboardPetani() {
           <h2 className="text-2xl font-bold text-white mb-6">Lahan Anda Saat Ini</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {lahanData.map(item => (
-              <LahanCard key={item.id} item={item} onEdit={handleEdit} onDelete={handleDelete} />
+              // Menggunakan LahanCard yang sudah didesain ulang
+              <LahanCard key={item.id} item={item} />
             ))}
             <button 
               onClick={() => navigate('/petani/tambahlahan')} 

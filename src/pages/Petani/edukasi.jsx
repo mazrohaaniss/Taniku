@@ -10,7 +10,7 @@ import { BookOpen, Megaphone, ArrowRight, Video, FileText } from 'lucide-react';
 const MateriCard = ({ materi }) => (
   <Link 
     to={`/petani/edukasi/${materi.id}`}
-    className="block bg-slate-800/50 rounded-2xl border border-slate-800 overflow-hidden group transition-all duration-300 hover:border-emerald-500/50 hover:-translate-y-1"
+    className="block bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden group transition-all duration-300 hover:border-emerald-500/80 hover:-translate-y-1 shadow-lg"
   >
     <div className="aspect-video overflow-hidden relative">
       <img 
@@ -35,8 +35,8 @@ const MateriCard = ({ materi }) => (
 );
 
 const PengumumanItem = ({ item }) => (
-    <div className="bg-slate-800/50 p-5 rounded-xl border border-slate-800 flex items-start gap-4">
-        <div className="p-3 bg-slate-700 rounded-lg mt-1">
+    <div className="bg-slate-800 p-5 rounded-xl border border-slate-700 flex items-start gap-4">
+        <div className="p-3 bg-slate-700/50 rounded-lg mt-1">
             <Megaphone className="w-5 h-5 text-emerald-400"/>
         </div>
         <div>
@@ -117,7 +117,7 @@ export default function Edukasi() {
         <div>
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3"><BookOpen className="text-emerald-400"/> Materi Pembelajaran</h2>
             {materiList.length === 0 ? (
-                <div className="text-center py-20 bg-slate-800/50 rounded-2xl border border-dashed border-slate-700">
+                <div className="text-center py-20 bg-slate-800 rounded-2xl border border-dashed border-slate-700">
                     <p className="text-slate-300 font-semibold text-xl">Materi belum tersedia.</p>
                     <p className="text-sm text-slate-500 mt-2">Nantikan artikel dan video panduan dari kami.</p>
                 </div>

@@ -5,16 +5,13 @@ import PetaniNavbar from '../../components/petani/PetaniNavbar';
 import Footer from '../../components/petani/Footer';
 import { Plus, MessageSquare, User, Clock } from 'lucide-react';
 
-// --- Komponen-komponen Kecil untuk Halaman ---
-
-// Kartu untuk setiap topik diskusi
 const TopikCard = ({ topik }) => (
   <Link 
     to={`/petani/konsultasi/${topik.id}`}
-    className="block bg-slate-800/50 p-6 rounded-2xl border border-slate-800 hover:border-emerald-500/50 hover:-translate-y-1 transition-all duration-300 group"
+    className="block bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-emerald-500/80 hover:-translate-y-1 transition-all duration-300 group"
   >
     <div className="flex items-start gap-4">
-      <div className="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0">
+      <div className="w-12 h-12 bg-slate-700/50 rounded-full flex items-center justify-center flex-shrink-0">
         <User className="w-6 h-6 text-emerald-400" />
       </div>
       <div className="flex-grow">
@@ -40,9 +37,6 @@ const TopikCard = ({ topik }) => (
   </Link>
 );
 
-
-// --- Komponen Utama Halaman Konsultasi ---
-
 export default function Konsultasi() {
   const [topikList, setTopikList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +47,6 @@ export default function Konsultasi() {
       setLoading(true);
       setError(null);
       try {
-        // Memanggil RPC function yang sudah dibuat di Supabase untuk efisiensi
         const { data, error: rpcError } = await supabase.rpc('get_all_topik_with_answer_count');
         
         if (rpcError) throw rpcError;
@@ -68,11 +61,9 @@ export default function Konsultasi() {
     
     fetchTopik();
 
-    // Listener realtime untuk topik baru, tidak perlu fetch ulang semua data
     const channel = supabase.channel('topik-diskusi-realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'topik_diskusi' }, 
         (payload) => {
-          // Tambahkan topik baru ke daftar yang ada
           setTopikList(currentList => [{ ...payload.new, jawaban_count: 0 }, ...currentList]);
         }
       ).subscribe();
@@ -88,7 +79,6 @@ export default function Konsultasi() {
     <div className="bg-slate-900 min-h-screen">
       <PetaniNavbar />
       <main className="container mx-auto px-4 py-12 pt-28 md:pt-32">
-        {/* Hero Section */}
         <div className="text-center mb-12">
         <h1 className="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-lime-400 leading-tight mb-4">
             Ruang Diskusi Petani Hebat
@@ -98,8 +88,7 @@ export default function Konsultasi() {
           </p>
         </div>
 
-        {/* Tombol Aksi Utama */}
-        <div className="mb-10 flex justify-end">
+        <div className="mb-10 flex justify-center">
             <Link 
               to="/petani/konsultasi/tambah" 
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-full font-bold hover:scale-105 transition-transform shadow-2xl shadow-emerald-800/30"
@@ -109,7 +98,6 @@ export default function Konsultasi() {
             </Link>
         </div>
 
-        {/* Daftar Topik Diskusi */}
         <div className="grid grid-cols-1 gap-6">
           {topikList.length === 0 ? (
             <div className="text-center py-20 bg-slate-800/50 rounded-2xl border border-dashed border-slate-700">
