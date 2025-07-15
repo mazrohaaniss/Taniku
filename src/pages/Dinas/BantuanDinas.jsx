@@ -4,12 +4,11 @@ import { Link } from 'react-router-dom';
 import DinasSidebar from '../../components/dinas/DinasSidebar';
 import DinasHeader from '../../components/dinas/DinasHeader';
 import DinasFooter from '../../components/dinas/Footer';
-import { ShieldCheck, Filter, ChevronRight } from 'lucide-react';
+import { Filter, ChevronRight } from 'lucide-react';
 
-// Komponen untuk Status Badge
 const StatusBadge = ({ status }) => {
   const baseClasses = "px-2.5 py-1 text-xs font-semibold rounded-full";
-  let specificClasses = "bg-yellow-100 text-yellow-800"; // Default: Diajukan
+  let specificClasses = "bg-yellow-100 text-yellow-800";
 
   if (status === 'Disetujui') {
     specificClasses = "bg-green-100 text-green-800";
@@ -31,7 +30,6 @@ export default function BantuanDinas() {
 
   useEffect(() => {
     const fetchPengajuan = async () => {
-      setLoading(true);
       setError(null);
       try {
         const { data, error: fetchError } = await supabase
@@ -48,16 +46,31 @@ export default function BantuanDinas() {
 
         if (fetchError) throw fetchError;
         setPengajuanList(data || []);
-        setFilteredList(data || []);
       } catch (err) {
         setError(`Gagal memuat data: ${err.message}`);
         console.error('Error details:', err);
       } finally {
-        setLoading(false);
+        if (loading) setLoading(false);
       }
     };
+
     fetchPengajuan();
-  }, []);
+
+    const channel = supabase.channel('pengajuan_bantuan_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'pengajuan_bantuan' },
+        (payload) => {
+          console.log('Perubahan terdeteksi, memuat ulang data...', payload);
+          fetchPengajuan();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loading]);
 
   useEffect(() => {
     if (activeFilter === 'Semua') {
@@ -129,8 +142,8 @@ export default function BantuanDinas() {
               </table>
             </div>
           </div>
-          <DinasFooter />
         </main>
+        <DinasFooter />
       </div>
     </div>
   );

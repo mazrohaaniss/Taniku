@@ -26,6 +26,7 @@ import DetailMateri from './pages/Petani/DetailMateri';
 
 // Halaman Dinas
 import DashboardDinas from './pages/Dinas/DashboardDinas';
+import AnalisisPertanian from './pages/Dinas/AnalisisPertanian';
 import BantuanDinas from './pages/Dinas/BantuanDinas'; 
 import DetailBantuanDinas from './pages/Dinas/DetailBantuanDInas';
 
@@ -78,6 +79,7 @@ function App() {
 
       {/* --- Rute untuk Dinas --- */}
       <Route path="/dinas/dashboard" element={<DashboardDinas />} />
+      <Route path="/dinas/analisis" element={<AnalisisPertanian />} />
       <Route path="/dinas/bantuan" element={<BantuanDinas />} />
       <Route path="/dinas/bantuan/:id" element={<DetailBantuanDinas />} /> 
       

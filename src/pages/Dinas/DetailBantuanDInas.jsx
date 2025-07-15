@@ -6,10 +6,9 @@ import DinasHeader from '../../components/dinas/DinasHeader';
 import DinasFooter from '../../components/dinas/Footer';
 import { ChevronLeft, Check, X, MessageSquare } from 'lucide-react';
 
-// Komponen untuk Status Badge agar konsisten dengan halaman daftar
 const StatusBadge = ({ status }) => {
   const baseClasses = "px-2.5 py-1 text-xs font-semibold rounded-full inline-block";
-  let specificClasses = "bg-yellow-100 text-yellow-800"; // Default: Diajukan
+  let specificClasses = "bg-yellow-100 text-yellow-800";
 
   if (status === 'Disetujui') {
     specificClasses = "bg-green-100 text-green-800";
@@ -32,7 +31,6 @@ export default function DetailBantuanDinas() {
     const fetchDetail = async () => {
       setLoading(true);
       try {
-        // Ambil no_wa dari tabel users
         const { data, error: fetchError } = await supabase
           .from('pengajuan_bantuan')
           .select('*, users(nama_lengkap, email, no_wa)')
@@ -62,7 +60,6 @@ export default function DetailBantuanDinas() {
         
       if (updateError) throw updateError;
 
-      // Logika untuk mengirim notifikasi WhatsApp
       const noWaPetani = pengajuan?.users?.no_wa;
       if (noWaPetani) {
         const statusText = newStatus === 'Disetujui' ? 'DISETUJUI' : 'DITOLAK';
@@ -73,7 +70,7 @@ export default function DetailBantuanDinas() {
         }
         pesan += `Terima kasih atas perhatiannya.\n\n- Dinas Pertanian`;
 
-        // Format nomor WA: hapus karakter non-digit, ganti 0 di depan dengan 62
+  
         let formattedNoWa = noWaPetani.replace(/\D/g, '');
         if (formattedNoWa.startsWith('0')) {
           formattedNoWa = '62' + formattedNoWa.substring(1);
@@ -81,7 +78,6 @@ export default function DetailBantuanDinas() {
         
         const waUrl = `https://wa.me/${formattedNoWa}?text=${encodeURIComponent(pesan)}`;
         
-        // Buka di tab baru
         window.open(waUrl, '_blank');
       }
 
@@ -131,7 +127,7 @@ export default function DetailBantuanDinas() {
 
                 <div className="border-t border-gray-200"></div>
 
-                {/* Informasi Detail */}
+  
                 <div className="space-y-4">
                   <div>
                     <h3 className="font-semibold text-gray-700 mb-1">Status Saat Ini</h3>
@@ -149,7 +145,7 @@ export default function DetailBantuanDinas() {
                   )}
                 </div>
 
-                {/* Foto Pendukung */}
+    
                 {pengajuan.foto_url && (
                   <div className="border-t border-gray-200 pt-6">
                     <h3 className="font-semibold text-gray-700 mb-2">Foto Pendukung</h3>
@@ -158,7 +154,7 @@ export default function DetailBantuanDinas() {
                 )}
               </div>
 
-              {/* Bagian Aksi */}
+
               {pengajuan.status === 'Diajukan' && (
                 <div className="bg-gray-50 p-6 lg:p-8 border-t border-gray-200">
                   <h3 className="font-semibold text-gray-800 mb-3">Tindakan Verifikasi</h3>
@@ -185,7 +181,7 @@ export default function DetailBantuanDinas() {
                 </div>
               )}
 
-              {/* Menampilkan Catatan Final */}
+
               {pengajuan.status !== 'Diajukan' && pengajuan.catatan && (
                 <div className="bg-gray-50 p-6 lg:p-8 border-t border-gray-200">
                   <h3 className="font-semibold text-gray-800 mb-2">Catatan dari Dinas</h3>
