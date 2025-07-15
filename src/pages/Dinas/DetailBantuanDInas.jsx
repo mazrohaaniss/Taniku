@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 import DinasSidebar from '../../components/dinas/DinasSidebar';
 import DinasHeader from '../../components/dinas/DinasHeader';
 import DinasFooter from '../../components/dinas/Footer';
-import { ChevronLeft, Check, X } from 'lucide-react';
+import { ChevronLeft, Check, X, MessageSquare } from 'lucide-react';
 
 // Komponen untuk Status Badge agar konsisten dengan halaman daftar
 const StatusBadge = ({ status }) => {
@@ -32,9 +32,10 @@ export default function DetailBantuanDinas() {
     const fetchDetail = async () => {
       setLoading(true);
       try {
+        // Ambil no_wa dari tabel users
         const { data, error: fetchError } = await supabase
           .from('pengajuan_bantuan')
-          .select('*, users(nama_lengkap, email)')
+          .select('*, users(nama_lengkap, email, no_wa)')
           .eq('id', id)
           .single();
         if (fetchError) throw fetchError;
@@ -58,9 +59,35 @@ export default function DetailBantuanDinas() {
         .from('pengajuan_bantuan')
         .update({ status: newStatus, catatan: catatan })
         .eq('id', id);
+        
       if (updateError) throw updateError;
-      alert(`Pengajuan telah ${newStatus.toLowerCase()}.`);
+
+      // Logika untuk mengirim notifikasi WhatsApp
+      const noWaPetani = pengajuan?.users?.no_wa;
+      if (noWaPetani) {
+        const statusText = newStatus === 'Disetujui' ? 'DISETUJUI' : 'DITOLAK';
+        let pesan = `Yth. Bpk/Ibu ${pengajuan.users.nama_lengkap},\n\n`;
+        pesan += `Pengajuan bantuan *${pengajuan.jenis_bantuan}* Anda telah kami verifikasi dengan status: *${statusText}*.\n\n`;
+        if (catatan) {
+          pesan += `Catatan dari kami:\n_"${catatan}"_\n\n`;
+        }
+        pesan += `Terima kasih atas perhatiannya.\n\n- Dinas Pertanian`;
+
+        // Format nomor WA: hapus karakter non-digit, ganti 0 di depan dengan 62
+        let formattedNoWa = noWaPetani.replace(/\D/g, '');
+        if (formattedNoWa.startsWith('0')) {
+          formattedNoWa = '62' + formattedNoWa.substring(1);
+        }
+        
+        const waUrl = `https://wa.me/${formattedNoWa}?text=${encodeURIComponent(pesan)}`;
+        
+        // Buka di tab baru
+        window.open(waUrl, '_blank');
+      }
+
+      alert(`Pengajuan telah ${newStatus.toLowerCase()}. Notifikasi WhatsApp sedang disiapkan.`);
       navigate('/dinas/bantuan');
+
     } catch (err) {
       setError(`Gagal memperbarui status: ${err.message}`);
     } finally {
@@ -95,6 +122,11 @@ export default function DetailBantuanDinas() {
                   <p className="text-gray-500 mt-1">
                     Diajukan oleh: <span className="font-semibold text-gray-700">{pengajuan.users.nama_lengkap}</span> ({pengajuan.users.email})
                   </p>
+                   {pengajuan.users?.no_wa && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      No. WhatsApp: <span className="font-semibold text-gray-700">{pengajuan.users.no_wa}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="border-t border-gray-200"></div>
@@ -139,13 +171,16 @@ export default function DetailBantuanDinas() {
                       rows="3"
                     />
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <button onClick={() => handleUpdateStatus('Disetujui')} disabled={loading} className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors shadow-sm">
-                        <Check className="w-5 h-5 mr-2" /> Setujui
+                      <button onClick={() => handleUpdateStatus('Disetujui')} disabled={loading || !pengajuan.users?.no_wa} className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm">
+                        <MessageSquare className="w-5 h-5 mr-2" /> Setujui & Kirim WA
                       </button>
-                      <button onClick={() => handleUpdateStatus('Ditolak')} disabled={loading} className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors shadow-sm">
-                        <X className="w-5 h-5 mr-2" /> Tolak
+                      <button onClick={() => handleUpdateStatus('Ditolak')} disabled={loading || !pengajuan.users?.no_wa} className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm">
+                        <X className="w-5 h-5 mr-2" /> Tolak & Kirim WA
                       </button>
                     </div>
+                     { !pengajuan.users?.no_wa && (
+                        <p className="text-xs text-center text-red-600">Nomor WhatsApp petani tidak ditemukan. Tombol dinonaktifkan.</p>
+                    )}
                   </div>
                 </div>
               )}
