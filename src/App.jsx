@@ -35,6 +35,8 @@ import EdukasiDinas from './pages/Dinas/EdukasiDinas';
 import TambahMateri from './pages/Dinas/TambahMateri';
 import PengumumanDinas from './pages/Dinas/PengumumanDinas';
 import TambahPengumuman from './pages/Dinas/TambahPengumuman';
+import DataPetani from './pages/Dinas/DataPetani';
+import DetailPetaniDinas from './pages/Dinas/DetailPetani';
 
 function App() {
   const navigate = useNavigate();
@@ -94,6 +96,8 @@ function App() {
       <Route path="/dinas/edukasi/tambah" element={<TambahMateri />} />
       <Route path="/dinas/pengumuman" element={<PengumumanDinas />} />
       <Route path="/dinas/pengumuman/tambah" element={<TambahPengumuman />} />
+      <Route path="/dinas/data-petani" element={<DataPetani />} />
+      <Route path="/dinas/data-petani/:petaniId" element={<DetailPetaniDinas />} />
       
     </Routes>
   );

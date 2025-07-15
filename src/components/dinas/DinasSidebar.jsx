@@ -1,5 +1,5 @@
 import { NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, ShieldCheck, MessageSquare, BookOpen, Megaphone, Leaf, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, ShieldCheck, MessageSquare, BookOpen, Megaphone, Leaf, BarChart3, Users } from 'lucide-react';
 
 export default function DinasSidebar() {
   const linkClass = "flex items-center px-4 py-3 text-slate-300 hover:bg-slate-700/50 hover:text-white rounded-lg transition-colors duration-200";
@@ -7,12 +7,12 @@ export default function DinasSidebar() {
 
   const navLinks = [
     { to: "/dinas/dashboard", text: "Dashboard", icon: <LayoutDashboard className="w-5 h-5 mr-3" /> },
-    // Tautan baru untuk Analisis Pertanian
     { to: "/dinas/analisis", text: "Analisis Pertanian", icon: <BarChart3 className="w-5 h-5 mr-3" /> },
     { to: "/dinas/bantuan", text: "Manajemen Bantuan", icon: <ShieldCheck className="w-5 h-5 mr-3" /> },
     { to: "/dinas/konsultasi", text: "Forum Konsultasi", icon: <MessageSquare className="w-5 h-5 mr-3" /> },
     { to: "/dinas/edukasi", text: "Pusat Edukasi", icon: <BookOpen className="w-5 h-5 mr-3" /> },
     { to: "/dinas/pengumuman", text: "Pengumuman", icon: <Megaphone className="w-5 h-5 mr-3" /> },
+    { to: "/dinas/data-petani", text: "Data Petani", icon: <Users className="w-5 h-5 mr-3" /> },
   ];
 
   return (
