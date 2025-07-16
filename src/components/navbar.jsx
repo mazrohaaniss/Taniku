@@ -21,9 +21,9 @@ const Navbar = ({ scrollY }) => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/login" className={`px-6 py-2 rounded-full font-semibold transition-colors ${scrollY > 50 ? 'text-gray-800 hover:text-emerald-600' : 'text-white hover:bg-sky-100'}`}>
-              Masuk
-            </Link>
+          <Link to="/login" className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${scrollY > 50 ? 'text-gray-800 hover:text-emerald-600 hover:bg-white' : 'text-white hover:text-emerald-600 hover:bg-white'}`}>
+            Masuk
+          </Link>
             <Link to="/register" className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 transform hover:scale-105">
               Daftar
             </Link>
@@ -31,8 +31,8 @@ const Navbar = ({ scrollY }) => {
 
           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             {isMenuOpen ? 
-              <X className={`w-6 h-6 ${scrollY > 50 ? 'text-gray-800' : 'text-sky-700'}`} /> : 
-              <Menu className={`w-6 h-6 ${scrollY > 50 ? 'text-gray-800' : 'text-sky-700'}`} />
+              <X className={`w-6 h-6 ${scrollY > 50 ? 'text-gray-800' : 'text-white'}`} /> : 
+              <Menu className={`w-6 h-6 ${scrollY > 50 ? 'text-gray-800' : 'text-white'}`} />
             }
           </button>
         </div>
