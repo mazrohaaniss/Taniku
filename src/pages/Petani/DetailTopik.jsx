@@ -137,7 +137,7 @@ export default function DetailTopik() {
           <div className="mt-12 pt-8 border-t border-slate-700/50">
             <h3 className="text-xl font-bold text-white mb-4">Ikut Berdiskusi</h3>
             <form onSubmit={handleAnswerSubmit} className="bg-slate-800/50 p-6 rounded-2xl border border-slate-800">
-              <textarea value={newAnswer} onChange={(e) => setNewAnswer(e.target.value)} placeholder="Tulis jawaban Anda di sini..." rows="5" className="w-full px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg mb-4"></textarea>
+              <textarea value={newAnswer} onChange={(e) => setNewAnswer(e.target.value)} placeholder="Tulis jawaban Anda di sini..." rows="5" className="w-full text-white px-4 py-2.5 bg-slate-800/70 border border-slate-700 rounded-lg mb-4"></textarea>
               <div className="flex justify-end">
                 <button type="submit" disabled={isSubmitting} className="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-700 disabled:opacity-50">
                   {isSubmitting ? <Loader className="animate-spin w-4 h-4"/> : <Send className="w-4 h-4" />}
