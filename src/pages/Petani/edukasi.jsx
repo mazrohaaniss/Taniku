@@ -14,9 +14,11 @@ const MateriCard = ({ materi }) => (
   >
     <div className="aspect-video overflow-hidden relative">
       <img 
-        src={materi.thumbnail_url || 'https://placehold.co/600x400/0f172a/10b981?text=Taniku'} 
+        src={materi.thumbnail_url || `https://placehold.co/600x400/1e293b/34d399?text=${materi.kategori || 'Taniku'}`} 
         alt={materi.judul}
         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+        // Menambahkan fallback jika gambar utama gagal dimuat
+        onError={(e) => { e.target.onerror = null; e.target.src=`https://placehold.co/600x400/1e293b/34d399?text=Error`; }}
       />
       <div className="absolute top-3 right-3 px-2 py-1 text-xs font-semibold rounded-full bg-slate-900/70 backdrop-blur-sm flex items-center gap-1.5">
         {materi.tipe === 'Video' ? <Video className="w-3 h-3 text-emerald-400" /> : <FileText className="w-3 h-3 text-emerald-400" />}

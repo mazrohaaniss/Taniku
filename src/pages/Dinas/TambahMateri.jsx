@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 import DinasSidebar from '../../components/dinas/DinasSidebar';
 import DinasHeader from '../../components/dinas/DinasHeader';
 import DinasFooter from '../../components/dinas/Footer';
-import { ChevronLeft, Send } from 'lucide-react';
+import { ChevronLeft, Send, UploadCloud } from 'lucide-react';
 
 export default function TambahMateri() {
     const [formData, setFormData] = useState({
@@ -14,6 +14,8 @@ export default function TambahMateri() {
         konten: '',
         video_url: ''
     });
+    const [thumbnailFile, setThumbnailFile] = useState(null);
+    const [fileName, setFileName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
 
@@ -22,11 +24,38 @@ export default function TambahMateri() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setThumbnailFile(e.target.files[0]);
+            setFileName(e.target.files[0].name);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const dataToInsert = { ...formData };
+            let thumbnailUrl = null;
+
+            // Langkah 1: Unggah thumbnail jika ada
+            if (thumbnailFile) {
+                const filePath = `public/${Date.now()}_${thumbnailFile.name}`;
+                const { error: uploadError } = await supabase.storage
+                    .from('materi-thumbnails')
+                    .upload(filePath, thumbnailFile);
+
+                if (uploadError) throw uploadError;
+
+                // Langkah 2: Dapatkan URL publik dari file yang diunggah
+                const { data: urlData } = supabase.storage
+                    .from('materi-thumbnails')
+                    .getPublicUrl(filePath);
+                
+                thumbnailUrl = urlData.publicUrl;
+            }
+
+            // Langkah 3: Siapkan data untuk dimasukkan ke tabel
+            const dataToInsert = { ...formData, thumbnail_url: thumbnailUrl };
             if (dataToInsert.tipe === 'Artikel') {
                 dataToInsert.video_url = null;
             } else {
@@ -62,6 +91,23 @@ export default function TambahMateri() {
                                 <div>
                                     <label htmlFor="judul" className="block text-sm font-medium text-gray-700 mb-1">Judul Materi</label>
                                     <input type="text" name="judul" id="judul" value={formData.judul} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded-lg" />
+                                </div>
+                                <div>
+                                    <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700 mb-1">Foto Thumbnail (Opsional)</label>
+                                    <label htmlFor="thumbnail" className="w-full flex items-center justify-center px-4 py-6 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100">
+                                        <div className="text-center">
+                                            <UploadCloud className="w-8 h-8 mx-auto text-gray-400" />
+                                            <p className="mt-2 text-sm text-gray-600">
+                                                <span className="font-semibold text-emerald-600">Klik untuk mengunggah</span>
+                                            </p>
+                                            {fileName ? (
+                                                <p className="text-xs text-emerald-500 mt-1">{fileName}</p>
+                                            ) : (
+                                                <p className="text-xs text-gray-500 mt-1">PNG atau JPG (Maks 2MB)</p>
+                                            )}
+                                        </div>
+                                        <input id="thumbnail" type="file" name="thumbnail" accept="image/*" onChange={handleFileChange} className="hidden" />
+                                    </label>
                                 </div>
                                 <div>
                                     <label htmlFor="tipe" className="block text-sm font-medium text-gray-700 mb-1">Tipe Materi</label>
